@@ -6,9 +6,7 @@ const Profile = mongoose.model("Profile")
 const ReferralHistory = mongoose.model('ReferralHistory');
 const User = mongoose.model("User");
 const mailgunSetup = require('../../config/mailgun');
-
-const createdYear = new Date().getFullYear();
-const copyrightYear = createdYear > 2022 ? `2022 - ${new Date().getFullYear()}` : '2022'
+const text = require('./text')
 
 module.exports = async (user, res, refcode, type, data) => {
 
@@ -18,51 +16,20 @@ module.exports = async (user, res, refcode, type, data) => {
     const currency = config && config[0].currency;
 
     const configData = {
-        name: config[0].appName,
+        name: process.env.NAME,
         bio: process.env.BIO,
-        brandColorA: process.env.BRAND_COLOR,
+        bg: process.env.BRAND_COLOR,
     }
 
-    const URL = `${process.env.FRONTEND_BASE_URL}${process.env.VERIFY_EMAIL_URL}/?token=${user.verifyEmailToken}`
+    const URL = `${process.env.FRONTEND_BASE_URL}/${process.env.VERIFY_EMAIL_URL}/${user.verifyEmailToken}`
 
     if (process.env.ENV !== 'development') {
-        //send email
-        const text = `
-            <div style="border: 2px solid #aaa; box-sizing: border-box; margin: 0; background: #fff; height: 70vh; padding: 10px">
-
-                <div style="text-align:center; height: 70px; background: ${configData.brandColorA}">
-                    <h2 style="font-weight: bold; font-size: 1.5rem; color: #fff; padding:3px 3px 0 3px; margin:0">
-                        ${configData.name}
-                    </h2>
-                    <small style="color: #aaa; width: 100%; font-size: 0.8rem; font-style: italic; font-weight: 600;">
-                        ${configData.bio}
-                    </small>
-                </div>
-
-                <div style="height: calc(100% - 70px - 40px - 20px - 10px - 10px); width:100%">
-                    <div style="font-size: 1rem; text-align: center; color:#000; padding: 50px 10px 20px 10px">
-                        Thanks <span style="font-weight: bold">${user.username}</span> for registering with ${configData.name}
-                    </div>
-                    <div>
-                        <a style="display:inline-block; background: ${configData.brandColorA}; text-align:center; padding: 15px; color: #fff; font-weight: 600" href="${URL}">Click to Verify Your Account</a>
-                    </div>
-                    <div style="text-align: center; margin: 5px 0; padding:10px">${URL}</div>
-                </div>
-
-                <div style="text-align:center; height: 40px; padding: 10px; background: #000">
-                    <div style="color: #fff; padding: 0; margin:0">
-                        &copy; ${copyrightYear} ${configData.name}
-                    <div>
-                </div>
-
-            </div>
-        `
 
         const email_data = {
             from: `${configData.name} <${process.env.EMAIL_USER}>`,
             to: user.email,
             subject: 'Verify Your Email',
-            html: text
+            html: text.linkText(configData.name, configData.bio, configData.bg, URL, user, 'verify-email', "Click to Activate your Account")
         }
 
         mailgunSetup.messages().send(email_data, async (err, resp) => {

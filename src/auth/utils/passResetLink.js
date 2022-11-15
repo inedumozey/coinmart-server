@@ -3,9 +3,7 @@ const mongoose = require('mongoose')
 require('dotenv').config();
 const Config = mongoose.model("Config");
 const mailgunSetup = require('../../config/mailgun');
-
-const createdYear = new Date().getFullYear();
-const copyrightYear = createdYear > 2022 ? `2022 - ${new Date().getFullYear()}` : '2022'
+const text = require('./text')
 
 module.exports = async (data, res) => {
 
@@ -13,50 +11,20 @@ module.exports = async (data, res) => {
     const config = await Config.find({});
 
     const configData = {
-        name: config[0].appName,
+        name: process.env.NAME,
         bio: process.env.BIO,
-        brandColorA: process.env.BRAND_COLOR,
+        bg: process.env.BRAND_COLOR,
     }
 
-    const URL = `${process.env.FRONTEND_BASE_URL}${process.env.RESET_PASSWORD_URL}/?token=${data.passwordReset.token}`
+    const URL = `${process.env.FRONTEND_BASE_URL}/${process.env.RESET_PASSWORD_URL}/${data.passwordReset.token}`
 
     if (process.env.ENV !== 'development') {
-        // email text
-        const text = `
-            <div style="border: 2px solid #aaa; box-sizing: border-box; margin: 0; background: #fff; height: 70vh; padding: 10px">
 
-                <div style="text-align:center; height: 70px; background: ${configData.brandColorA}">
-                    <h2 style="font-weight: bold; font-size: 1.5rem; color: #fff; padding:3px 3px 0 3px; margin:0">
-                        ${configData.name}
-                    </h2>
-                    <small style="color: #aaa; width: 100%; font-size: 0.8rem; font-style: italic; font-weight: 600;">
-                        ${configData.bio}
-                    </small>
-                </div>
-
-                <div style="height: calc(100% - 70px - 40px - 20px - 10px - 10px); width:100%">
-                    <div style="font-size: 1rem; text-align: center; color:#000; padding: 50px 10px 20px 10px">
-                        Please ignore if this was not sent by you!.
-                    </div>
-                    <div>
-                        <a style="display:inline-block; background: ${configData.brandColorA}; text-align:center; padding: 15px; color: #fff; font-weight: 600" href="${URL}">Click to Reset your Password</a>
-                    </div>
-                    <div style="text-align: center; margin: 5px 0; padding:10px">${URL}</div>
-                </div>
-
-                <div style="text-align:center; height: 40px; padding: 10px; background: #000">
-                    <div style="color: #fff; padding: 0; margin:0">
-                        Copyright @ ${copyrightYear} ${configData.name}
-                    <div>
-                </div>
-
-            </div>
-        `
         const email_data = {
             from: `${configData.name} <${process.env.EMAIL_USER}>`,
             to: data.email,
             subject: 'Reset Your Password',
-            html: text,
+            html: text.linkText(configData.name, configData.bio, configData.bg, URL, data, 'password', "Click to Reset your Password")
         }
 
         mailgunSetup.messages().send(email_data, async (err, resp) => {

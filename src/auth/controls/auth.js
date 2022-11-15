@@ -221,7 +221,7 @@ module.exports = {
 
                     return res.status(200).json({
                         status: true,
-                        msg: "our account is now activated.",
+                        msg: "Your account is now activated.",
                         accesstoken,
                         refreshtoken,
                         data: user
@@ -230,6 +230,7 @@ module.exports = {
             }
         }
         catch (err) {
+            console.log(err)
             res.status(500).json({ status: false, message: err.message || "Internal Server error, please contact customer support" })
         }
     },
