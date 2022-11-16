@@ -21,7 +21,7 @@ module.exports = {
             // find the profile of this user
             user = await Profile.findOne({ id: user.profile });
 
-            let imageFileType = /png|jpg|jpeng/
+            let imageFileType = /png|jpg|jpeg/
 
             upload.single('file')(req, res, async (err) => {
                 try {
@@ -36,7 +36,7 @@ module.exports = {
                     const isImage = imageFileType.test(extType) || imageFileType.test(mimeType)
 
                     if (!isImage) {
-                        return res.status(402).json({ status: false, msg: "Invalid file type" })
+                        return res.status(402).json({ status: false, msg: "Supported files are PNG, JPG and JPEG" })
 
                     } else if (err instanceof multer.MulterError) {
                         return res.status(402).json({ status: false, msg: err.message })
