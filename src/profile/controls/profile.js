@@ -7,7 +7,7 @@ require("dotenv").config();
 const multerConfig = require("../../config/multer");
 const path = require("path")
 const fs = require("fs")
-const cloudinary = require("cloudinary");
+const cloudinary = require("../../config/cloudinary");
 
 module.exports = {
     updateProfileImage: async (req, res) => {
@@ -16,10 +16,10 @@ module.exports = {
             const { upload, multer } = multerConfig()
             const userId = req.user;
             // find the profile id from User collection
-            let user = await User.findOne({ _id: userId });
+            const user = await User.findOne({ _id: userId }).populate({ path: 'profile' });
 
             // find the profile of this user
-            user = await Profile.findOne({ id: user.profile });
+            const profile = await Profile.findOne({ _id: user.profile._id });
 
             let imageFileType = /png|jpg|jpeg/
 
@@ -48,15 +48,12 @@ module.exports = {
 
                         const filePath = req.file.path
 
-                        // get all config
-                        const config = await Config.find({});
-
-                        const appName = config[0].name // get the name of the app and use it as media folder on cloudinary
-
+                        // get the name of the app and use it as media folder on cloudinary
+                        const appName = process.env.NAME;
 
                         // update profile pic on cloudinary
                         //1. delete the file from cloudinary using the public id if it exist
-                        user.profilePicPublicId ? await cloudinary.v2.uploader.destroy(user.profilePicPublicId, { invalidate: true }) : ""
+                        profile.profilePicPublicId ? await cloudinary.v2.uploader.destroy(profile.profilePicPublicId, { invalidate: true }) : ""
 
                         // 2. upload the new file
                         const result = await cloudinary.v2.uploader.upload(filePath, {
@@ -66,22 +63,22 @@ module.exports = {
                             ]
                         })
 
-                        // update User database with the secure_url from cloudinary
-                        await Profile.findOneAndUpdate({ _id: userId }, {
+                        // update Profile database with the secure_url from cloudinary
+                        const data = await Profile.findOneAndUpdate({ _id: user.profile._id }, {
                             $set: {
                                 profilePicUrl: result.eager[0].secure_url,
                                 profilePicPublicId: result.public_id,
                             }
-                        })
+                        }, { new: true })
 
                         // remove the file path
                         fs.unlinkSync(filePath)
 
-                        return res.status(200).json({ status: true, msg: "Successful", data })
+                        return res.status(200).json({ status: true, msg: "Successful" })
                     }
                 }
                 catch (err) {
-                    return res.status(500).json({ status: false, msg: err.message })
+                    return res.status(500).json({ status: false, msg: err.message || 'Error occured! try again' })
                 }
             })
         }
