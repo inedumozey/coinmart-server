@@ -24,9 +24,13 @@ module.exports = {
 
     getUsers: async (req, res) => {
         try {
-            const users = await User.find({}).populate({ path: 'referrerId', select: ['_id', 'email', 'username'] }).populate({ path: 'referree', select: ['_id', 'email', 'username', 'hasInvested'] }).sort({ createdAt: -1 }).select("-password")
+            const data = await User.find({})
+                .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
+                .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
+                .populate({ path: 'profile' })
+                .select("-password");
 
-            return res.status(200).json({ status: true, msg: "successfull", data: users })
+            return res.status(200).json({ status: true, msg: "successfull", data })
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: "Server error, please contact customer support" })
@@ -38,12 +42,16 @@ module.exports = {
             const { id } = req.params;
 
             //find user by id, or email or username
-            const paramUser = await User.findOne({ $or: [{ _id: id }, { id }, { username: id }] }).populate({ path: 'referrerId', select: ['_id', 'email', 'username'] }).populate({ path: 'referree', select: ['_id', 'email', 'username', 'hasInvested'] }).select("-password");
+            const data = await User.findOne({ $or: [{ _id: id }, { id }, { username: id }] })
+                .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
+                .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
+                .populate({ path: 'profile' })
+                .select("-password");
 
-            if (!paramUser) res.status(404).json({ status: false, msg: `User not found!` });
+            if (!data) res.status(404).json({ status: false, msg: `User not found!` });
 
             // send the user      
-            return res.status(200).json({ status: true, msg: 'successfull', data: paramUser });
+            return res.status(200).json({ status: true, msg: 'successfull', data });
         }
 
         catch (err) {
@@ -55,21 +63,23 @@ module.exports = {
         try {
             const userId = req.user;
 
-            //find user by id, or email or username
-            const paramUser = await User.findOne({ _id: userId }).populate({ path: 'referrerId', select: ['_id', 'email', 'username'] }).populate({ path: 'referree', select: ['_id', 'email', 'username', 'active', 'hasInvested', 'masterInvestmentCount'] }).select("-password");
+            //find user by id sent from the client
+            const data = await User.findOne({ _id: userId })
+                .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
+                .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
+                .populate({ path: 'profile' })
+                .select("-password");
 
-            if (!paramUser) res.status(404).json({ status: false, msg: `User not found!` });
+            if (!data) res.status(404).json({ status: false, msg: `User not found!` });
 
             // send the user      
-            return res.status(200).json({ status: true, msg: 'successfull', data: paramUser });
+            return res.status(200).json({ status: true, msg: 'successfull', data });
         }
 
         catch (err) {
             res.status(500).send({ status: false, msg: "Server error, please contact customer support" })
         }
     },
-
-
 
     signup: async (req, res) => {
         try {
@@ -674,5 +684,4 @@ module.exports = {
             return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer service" })
         }
     },
-
 }

@@ -9,7 +9,7 @@ route.get("/get-all-users", adminAuth, authCrtl.getUsers);
 
 route.get("/get-profile", activatedUserAuth, authCrtl.getProfile);
 
-route.get("/get-user/:id", activatedUserAuth, authCrtl.getUser);
+route.get("/get-user/:id", adminAuth, authCrtl.getUser);
 
 route.post("/signup", authCrtl.signup);
 
