@@ -18,6 +18,10 @@ const schema = new mongoose.Schema(
             type: String,
             default: "USD"
         },
+        adminPassword: {
+            type: String,
+            default: "admin"
+        },
         allowTransfer: {
             type: Boolean,
             default: true

@@ -57,15 +57,15 @@ module.exports = {
             const authToken = req.headers["authorization"];
 
             if (!authToken) {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
             // Verify token
             const token = authToken.split(" ")[1]
             // Verify token
-            const data = await jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+            const data = await jwt.verify(token, process.env.JWT_ADMIN_SECRET)
 
             if (!data) {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
 
             // Use the data to get the user from User collection
@@ -89,12 +89,12 @@ module.exports = {
                 next()
             }
             else {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
         }
         catch (err) {
             if (err.message == 'invalid signature' || err.message == 'invalid token' || err.message === 'jwt malformed' || err.message === "jwt expired") {
-                return res.status(402).json({ status: false, msg: "You are not authorized! Please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
 
             }
             return res.status(500).json({ status: false, msg: err.message })
@@ -106,15 +106,15 @@ module.exports = {
             const authToken = req.headers["authorization"];
 
             if (!authToken) {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
             // Verify token
             const token = authToken.split(" ")[1]
             // Verify token
-            const data = await jwt.verify(token, process.env.JWT_ACCESS_SECRET)
+            const data = await jwt.verify(token, process.env.JWT_ADMIN_SECRET)
 
             if (!data) {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
 
             // Use the data to get the user from User collection
@@ -139,12 +139,12 @@ module.exports = {
             }
 
             else {
-                return res.status(402).json({ status: false, msg: "You are not authorized, please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
             }
         }
         catch (err) {
             if (err.message == 'invalid signature' || err.message == 'invalid token' || err.message === 'jwt malformed' || err.message === "jwt expired") {
-                return res.status(402).json({ status: false, msg: "You are not authorized! Please login or register" })
+                return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
 
             }
             return res.status(500).json({ status: false, msg: err.message })

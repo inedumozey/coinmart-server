@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Config = mongoose.model("Config");
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
+const bcrypt = require('bcrypt')
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
@@ -11,7 +12,8 @@ module.exports = {
 
     getConfig: async (req, res) => {
         try {
-
+            // attach default password to admin
+            const password = await bcrypt.hash("admin", 10);
             // get all config
             const config = await Config.find();
 
@@ -19,7 +21,8 @@ module.exports = {
             if (config.length < 1) {
 
                 // create the default
-                const newConfig = await Config.create({})
+                const newConfig = await Config.create({});
+                newConfig.adminPassword = password
 
                 const configs = await newConfig.save()
                 return res.status(200).json({ status: true, msg: "successful", data: configs })
@@ -134,5 +137,35 @@ module.exports = {
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message })
         }
+    },
+
+    changeAdminPassword: async (req, res) => {
+        try {
+            //hash the password
+            const password = await bcrypt.hash(DOMPurify.sanitize(req.body.password), 10);
+
+            const config = await Config.find();
+
+            // check if document is empty,
+            if (config.length < 1) {
+                // create new one
+                const newConfig = await Config.create({})
+                newConfig.adminPassword = password;
+
+                const configs = await newConfig.save()
+                return res.status(200).json({ status: true, msg: "successful", data: configs })
+            }
+
+            //get the first and only id
+            const id = config[0].id
+            await Config.findOneAndUpdate({ _id: id }, { $set: { password } });
+
+            return res.status(200).json({ status: true, msg: "Admin password changed successfully" });
+
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
     }
 }
+

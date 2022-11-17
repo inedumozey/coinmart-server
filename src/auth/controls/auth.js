@@ -15,7 +15,7 @@ const jwt = require("jsonwebtoken");
 const verificationLink = require('../utils/verificationLink');
 const passResetLink = require('../utils/passResetLink');
 const ran = require('../utils/randomString')
-const { generateAccesstoken, generateRefreshtoken } = require('../utils/generateTokens')
+const { generateAccesstoken, generateRefreshtoken, generateAdminToken } = require('../utils/generateTokens')
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
@@ -284,6 +284,54 @@ module.exports = {
                     data: user
                 })
             }
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message });
+        }
+    },
+
+    adminLogin: async (req, res) => {
+        try {
+            const { password } = req.body
+            const userId = req.user;
+
+            // find the login user
+            const user = await User.findOne({ _id: userId });
+
+            // get admin password from config
+            const config = await Config.find();
+
+            if (!user) {
+                return res.status(400).json({ status: false, msg: "User not found" });
+            }
+
+            if (user.role.toLowerCase() !== 'admin') {
+                return res.status(400).json({ status: false, msg: "Access denied to non-admin users" });
+            }
+
+            if (!config[0].adminPassword) {
+                return res.status(400).json({ status: false, msg: "Access denied! Try again" });
+            };
+
+            if (!password) {
+                return res.status(400).json({ status: false, msg: "the field is required!" });
+            }
+
+            // match provided password with the one in database
+            const match = await bcrypt.compare(password.toString(), config[0].adminPassword)
+
+            if (!match) {
+                return res.status(400).json({ status: false, msg: "Wrong password" });
+            }
+
+            // log the user in
+            const admintoken = generateAdminToken(user._id);
+
+            return res.status(200).json({
+                status: true,
+                msg: "Your are logged in as admin",
+                admintoken,
+            })
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message });
