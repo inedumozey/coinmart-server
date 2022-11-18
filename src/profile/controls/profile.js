@@ -9,6 +9,12 @@ const path = require("path")
 const fs = require("fs")
 const cloudinary = require("../../config/cloudinary");
 
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
+const { setDefaultResultOrder } = require('dns/promises');
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window)
+
 module.exports = {
     updateProfileImage: async (req, res) => {
         try {
@@ -25,7 +31,6 @@ module.exports = {
 
             upload.single('file')(req, res, async (err) => {
                 try {
-
                     if (!req.file) {
                         return res.status(402).json({ status: false, msg: "Empty file" })
                     }
@@ -169,6 +174,39 @@ module.exports = {
 
     update2fa: async (req, res) => {
         try {
+
+
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
+    },
+
+    updateProfile: async (req, res) => {
+        try {
+            const userId = req.user;
+            const data = {
+                country: DOMPurify.sanitize(req.body.country),
+                phone: DOMPurify.sanitize(req.body.phone),
+                address: DOMPurify.sanitize(req.body.address),
+            }
+
+            // find the profile id from User collection
+            const user = await User.findOne({ _id: userId }).populate({ path: 'profile' });
+
+            // find the profile of this user
+            const profile = await Profile.findOne({ _id: user.profile._id });
+
+            // update profile
+            await Profile.findOneAndUpdate({ _id: user.profile._id }, {
+                $set: {
+                    phone: !data.phone ? profile.phone : data.phone,
+                    address: !data.address ? profile.address : data.address,
+                    country: !data.country ? profile.country : data.country,
+                }
+            })
+
+            return res.status(200).json({ status: false, msg: "Profile updated" })
 
 
         }

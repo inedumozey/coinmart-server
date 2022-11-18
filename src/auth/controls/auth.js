@@ -73,7 +73,7 @@ module.exports = {
             if (!data) res.status(404).json({ status: false, msg: `User not found!` });
 
             // send the user      
-            return res.status(200).json({ status: true, msg: 'successfull', data });
+            return res.status(200).json({ status: true, msg: 'Profile Fetched Successfully', data });
         }
 
         catch (err) {
