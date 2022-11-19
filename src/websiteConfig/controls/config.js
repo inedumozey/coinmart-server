@@ -7,6 +7,16 @@ const bcrypt = require('bcrypt')
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
 
+// populate factors for withdrawal and transfer
+const resolve = (min, max, d) => {
+    let factors = []
+
+    for (let i = min; i <= max; i = i + d) {
+        factors.push(i)
+    }
+    return factors
+}
+
 
 module.exports = {
 
@@ -24,6 +34,7 @@ module.exports = {
                 const newConfig = await Config.create({});
                 newConfig.adminPassword = password
 
+                // resolve factors
                 const configs = await newConfig.save()
                 return res.status(200).json({ status: true, msg: "successful", data: configs })
             }
@@ -52,20 +63,20 @@ module.exports = {
                 referralBonusMaxCountForMasterPlan: Number(DOMPurify.sanitize(req.body.referralBonusMaxCountForMasterPlan)),
                 referralContestStarts: DOMPurify.sanitize(req.body.referralContestStarts),
                 referralContestStops: DOMPurify.sanitize(req.body.referralContestStops),
-                minWithdrawalLimit: Number(DOMPurify.sanitize(req.body.minWithdrawalLimit)),
-                maxWithdrawalLimit: Number(DOMPurify.sanitize(req.body.maxWithdrawalLimit)),
-                withdrawalCommonDiff: Number(DOMPurify.sanitize(req.body.withdrawalCommonDiff)),
+                minWithdrawableLimit: Number(DOMPurify.sanitize(req.body.minWithdrawableLimit)),
+                maxWithdrawableLimit: Number(DOMPurify.sanitize(req.body.maxWithdrawableLimit)),
+                withdrawableCommonDiff: Number(DOMPurify.sanitize(req.body.withdrawableCommonDiff)),
                 masterPlanAmountLimit: Number(DOMPurify.sanitize(req.body.masterPlanAmountLimit)),
-                minTransferLimit: Number(DOMPurify.sanitize(req.body.minTransferLimit)),
-                maxTransferLimit: Number(DOMPurify.sanitize(req.body.maxTransferLimit)),
-                transferCommonDiff: Number(DOMPurify.sanitize(req.body.transferCommonDiff)),
+                minTransferableLimit: Number(DOMPurify.sanitize(req.body.minTransferableLimit)),
+                maxTransferableLimit: Number(DOMPurify.sanitize(req.body.maxTransferableLimit)),
+                transferableCommonDiff: Number(DOMPurify.sanitize(req.body.transferableCommonDiff)),
                 pendingWithdrawalDuration: Number(DOMPurify.sanitize(req.body.pendingWithdrawalDuration)),
 
                 // array fields
                 referralContestPrizes: req.body.referralContestPrizes,
-                withdrawalFactors: req.body.withdrawalFactors,
-                withdrawalCoins: req.body.withdrawalCoins,
-                transferFactors: req.body.transferFactors,
+                withdrawableFactors: req.body.withdrawalFactors,
+                withdrawableCoins: req.body.withdrawalCoins,
+                transferableFactors: req.body.transferFactors,
 
                 // boolean fields
                 allowTransfer: DOMPurify.sanitize(req.body.allowTransfer),
@@ -80,15 +91,19 @@ module.exports = {
 
             // check if document is empty,
             if (config.length < 1) {
+                // attach default password to admin
+                const password = await bcrypt.hash("admin", 10);
                 // create new one
                 const newConfig = await Config.create({})
+                newConfig.adminPassword = password
+
 
                 const configs = await newConfig.save()
                 return res.status(200).json({ status: true, msg: "successful", data: configs })
             }
 
             //get the first and only id
-            const id = config[0].id
+            const id = config[0].id;
 
             //update config
             await Config.findOneAndUpdate({ _id: id }, {
@@ -105,20 +120,30 @@ module.exports = {
                     referralBonusMaxCountForMasterPlan: data.referralBonusMaxCountForMasterPlan ? data.referralBonusMaxCountForMasterPlan : config[0].referralBonusMaxCountForMasterPlan,
                     referralContestStarts: data.referralContestStarts ? data.referralContestStarts : config[0].referralContestStarts,
                     referralContestStops: data.referralContestStops ? data.referralContestStops : config[0].referralContestStops,
-                    minWithdrawalLimit: data.minWithdrawalLimit ? data.minWithdrawalLimit : config[0].minWithdrawalLimit,
-                    maxWithdrawalLimit: data.maxWithdrawalLimit ? data.maxWithdrawalLimit : config[0].maxWithdrawalLimit,
-                    withdrawalCommonDiff: data.withdrawalCommonDiff ? data.withdrawalCommonDiff : config[0].withdrawalCommonDiff,
+                    minWithdrawableLimit: data.minWithdrawableLimit ? data.minWithdrawableLimit : config[0].minWithdrawableLimit,
+                    maxWithdrawableLimit: data.maxWithdrawableLimit ? data.maxWithdrawableLimit : config[0].maxWithdrawableLimit,
+                    withdrawableCommonDiff: data.withdrawableCommonDiff ? data.withdrawableCommonDiff : config[0].withdrawableCommonDiff,
                     masterPlanAmountLimit: data.masterPlanAmountLimit ? data.masterPlanAmountLimit : config[0].masterPlanAmountLimit,
-                    minTransferLimit: data.minTransferLimit ? data.minTransferLimit : config[0].minTransferLimit,
-                    maxTransferLimit: data.maxTransferLimit ? data.maxTransferLimit : config[0].maxTransferLimit,
-                    transferCommonDiff: data.transferCommonDiff ? data.transferCommonDiff : config[0].transferCommonDiff,
+                    minTransferableLimit: data.minTransferableLimit ? data.minTransferableLimit : config[0].minTransferableLimit,
+                    maxTransferableLimit: data.maxTransferableLimit ? data.maxTransferableLimit : config[0].maxTransferableLimit,
+                    transferableCommonDiff: data.transferableCommonDiff ? data.transferableCommonDiff : config[0].transferableCommonDiff,
                     pendingWithdrawalDuration: data.pendingWithdrawalDuration ? data.pendingWithdrawalDuration : config[0].pendingWithdrawalDuration,
 
                     // array fields
+
+                    // this array comes from the client
+                    withdrawableCoins: data.withdrawableCoins ? data.withdrawableCoins : config[0].withdrawableCoins,
+
+                    // this array comes from the client
                     referralContestPrizes: data.referralContestPrizes ? data.referralContestPrizes : config[0].referralContestPrizes,
-                    withdrawalFactors: data.withdrawalFactors ? data.withdrawalFactors : config[0].withdrawalFactors,
-                    withdrawalCoins: data.withdrawalCoins ? data.withdrawalCoins : config[0].withdrawalCoins,
-                    transferFactors: data.transferFactors ? data.transferFactors : config[0].transferFactors,
+
+                    // this array is made from minWithdrawableLimit, maxWithdrawableLimit and withdrawableCommonDiff, hence all must be present for the update otherwise, use config data
+                    // When the factor has only 1 value [1], users are granted the chance to withdraw any infinity amount
+                    withdrawableFactors: (data.minWithdrawableLimit && data.maxWithdrawableLimit && data.withdrawableCommonDiff) ? resolve(data.minWithdrawableLimit, data.maxWithdrawableLimit, data.withdrawableCommonDiff) : config[0].withdrawableFactors,
+
+                    // this array is made from minTransferableLimit, maxTransferableLimit and transferableCommonDiff, hence all must be present for the update otherwise, use config data
+                    // When the factor has only 1 value [1], users are granted the chance to transfer any infinity amount
+                    transferableFactors: (data.minTransferableLimit && data.maxTransferableLimit && data.transferableCommonDiff) ? resolve(data.minTransferableLimit, data.maxTransferableLimit, data.transferableCommonDiff) : config[0].transferableFactors,
 
 
                     // boolean fileds
@@ -127,6 +152,9 @@ module.exports = {
                     allowInvestment: data.allowInvestment ? (data.allowInvestment === 'true' ? true : false) : config[0].allowInvestment,
                     allowReferralContest: data.allowReferralContest ? (data.allowReferralContest === 'true' ? true : false) : config[0].allowReferralContest,
                     startContestReg: data.startContestReg ? (data.startContestReg === 'true' ? true : false) : config[0].startContestReg,
+
+                    // admin password
+                    adminPassword: config[0].adminPassword
                 }
             });
 

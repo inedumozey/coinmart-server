@@ -11,14 +11,6 @@ const schema = new Schema({
         type: String,
         default: null
     },
-    docUrl: {
-        type: String,
-        default: null
-    },
-    docPublicId: {
-        type: String,
-        default: null
-    },
     twofa: {
         type: Number,
         default: null

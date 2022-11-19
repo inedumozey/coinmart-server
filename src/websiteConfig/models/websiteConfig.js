@@ -20,7 +20,6 @@ const schema = new mongoose.Schema(
         },
         adminPassword: {
             type: String,
-            default: "admin"
         },
         allowTransfer: {
             type: Boolean,
@@ -71,37 +70,40 @@ const schema = new mongoose.Schema(
             default: '2022-12-00T00:00'
         },
         referralContestPrizes: [],
-        minWithdrawalLimit: {
-            type: Number,
-            default: 5000
-        },
-        maxWithdrawalLimit: {
-            type: Number,
-            default: 100000
-        },
-        withdrawalCommonDiff: {
-            type: Number,
-            default: 5000
-        },
         masterPlanAmountLimit: { // masterPlanMinAmount
             type: Number,
             default: 200000
         },
-        withdrawalFactors: [],
-        withdrawalCoins: [],
-        minTransferLimit: {
+
+        minWithdrawableLimit: {
             type: Number,
-            default: 5000
+            default: 0
         },
-        maxTransferLimit: {
+        maxWithdrawableLimit: {
             type: Number,
-            default: 100000
+            default: 0
         },
-        transferCommonDiff: {
+        withdrawableCommonDiff: {
             type: Number,
-            default: 1000
+            default: 0
+        },
+        withdrawableFactors: [],
+        withdrawableCoins: [],
+
+        minTransferableLimit: {
+            type: Number,
+            default: 0
+        },
+        maxTransferableLimit: {
+            type: Number,
+            default: 0
+        },
+        transferableCommonDiff: {
+            type: Number,
+            default: 0
         },
         transferFactors: [],
+
         pendingWithdrawalDuration: {
             type: Number,
             default: 24
