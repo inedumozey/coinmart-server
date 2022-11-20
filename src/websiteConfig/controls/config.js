@@ -1,8 +1,10 @@
 const mongoose = require('mongoose')
+const User = mongoose.model("User");
 const Config = mongoose.model("Config");
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const bcrypt = require('bcrypt')
+const { generateAdminToken } = require('../../auth/utils/generateTokens')
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
@@ -22,8 +24,7 @@ module.exports = {
 
     getConfig: async (req, res) => {
         try {
-            // attach default password to admin
-            const password = await bcrypt.hash("admin", 10);
+
             // get all config
             const config = await Config.find();
 
@@ -32,6 +33,9 @@ module.exports = {
 
                 // create the default
                 const newConfig = await Config.create({});
+
+                // attach default password to admin
+                const password = await bcrypt.hash("admin", 10);
                 newConfig.adminPassword = password
 
                 // resolve factors
@@ -71,11 +75,14 @@ module.exports = {
                 maxTransferableLimit: Number(DOMPurify.sanitize(req.body.maxTransferableLimit)),
                 transferableCommonDiff: Number(DOMPurify.sanitize(req.body.transferableCommonDiff)),
                 pendingWithdrawalDuration: Number(DOMPurify.sanitize(req.body.pendingWithdrawalDuration)),
+                totalWithdrawal: Number(DOMPurify.sanitize(req.body.totalWithdrawal)),
+                membersCountry: Number(DOMPurify.sanitize(req.body.membersCountry)),
+                totalDeposit: Number(DOMPurify.sanitize(req.body.totalDeposit)),
 
                 // array fields
                 referralContestPrizes: req.body.referralContestPrizes,
                 withdrawableFactors: req.body.withdrawalFactors,
-                withdrawableCoins: req.body.withdrawalCoins,
+                withdrawableCoins: req.body.withdrawableCoins,
                 transferableFactors: req.body.transferFactors,
 
                 // boolean fields
@@ -128,6 +135,9 @@ module.exports = {
                     maxTransferableLimit: data.maxTransferableLimit ? data.maxTransferableLimit : config[0].maxTransferableLimit,
                     transferableCommonDiff: data.transferableCommonDiff ? data.transferableCommonDiff : config[0].transferableCommonDiff,
                     pendingWithdrawalDuration: data.pendingWithdrawalDuration ? data.pendingWithdrawalDuration : config[0].pendingWithdrawalDuration,
+                    totalWithdrawal: data.totalWithdrawal ? data.totalWithdrawal : config[0].totalWithdrawal,
+                    membersCountry: data.membersCountry ? data.membersCountry : config[0].membersCountry,
+                    totalDeposit: data.totalDeposit ? data.totalDeposit : config[0].totalDeposit,
 
                     // array fields
 
@@ -167,28 +177,123 @@ module.exports = {
         }
     },
 
-    changeAdminPassword: async (req, res) => {
+    adminLogin: async (req, res) => {
         try {
-            //hash the password
-            const password = await bcrypt.hash(DOMPurify.sanitize(req.body.password), 10);
+            const { password } = req.body
+            const userId = req.user;
 
+            // find the login user
+            const user = await User.findOne({ _id: userId });
+
+            // get admin password from config
+            const config = await Config.find();
+
+            if (!user) {
+                return res.status(400).json({ status: false, msg: "User not found" });
+            }
+
+            if (user.role.toLowerCase() !== 'admin') {
+                return res.status(400).json({ status: false, msg: "Access denied to non-admin users" });
+            }
+
+            if (!config[0].adminPassword) {
+                return res.status(400).json({ status: false, msg: "Access denied! Try again" });
+            };
+
+            if (!password) {
+                return res.status(400).json({ status: false, msg: "the field is required!" });
+            }
+
+            // match provided password with the one in database
+            const match = await bcrypt.compare(password.toString(), config[0].adminPassword)
+
+            if (!match) {
+                return res.status(400).json({ status: false, msg: "Wrong password" });
+            }
+
+            // log the user in
+            const admintoken = generateAdminToken(user._id);
+
+            return res.status(200).json({
+                status: true,
+                msg: "Your are logged in as admin",
+                admintoken,
+            })
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message });
+        }
+    },
+
+    resetAdminPassword: async (req, res) => {
+        try {
+
+            // set default config if not already set
             const config = await Config.find();
 
             // check if document is empty,
             if (config.length < 1) {
                 // create new one
                 const newConfig = await Config.create({})
+
+                //hash default admin  password
+                const password = await bcrypt.hash('admin', 10);
                 newConfig.adminPassword = password;
 
                 const configs = await newConfig.save()
                 return res.status(200).json({ status: true, msg: "successful", data: configs })
             }
 
-            //get the first and only id
-            const id = config[0].id
-            await Config.findOneAndUpdate({ _id: id }, { $set: { password } });
 
-            return res.status(200).json({ status: true, msg: "Admin password changed successfully" });
+            const userId = req.user;
+
+            const data = {
+                oldPassword: DOMPurify.sanitize(req.body.oldPassword),
+                newPassword: DOMPurify.sanitize(req.body.newPassword),
+                newCpassword: DOMPurify.sanitize(req.body.newCpassword)
+            }
+
+            if (!data.newPassword || !data.newCpassword || !data.oldPassword) {
+                return res.status(400).json({ status: false, msg: "All fields are required" });
+            }
+
+            //use the id to find the user
+            const user = await User.findOne({ _id: userId })
+
+            if (!user) {
+                return res.status(400).json({ status: false, msg: "User not found" });
+            }
+
+            if (!user.isSupperAdmin) {
+                return res.status(400).json({ status: false, msg: "Only supper admin can reset admin password" });
+            }
+
+            else if (data.newPassword.length < 6) {
+                return res.status(405).json({ status: false, msg: "Password too short, must not be less than 6 characters" });
+            }
+
+            if (data.newPassword != data.newCpassword) {
+                return res.status(405).json({ status: false, msg: "Passwords do not match!" });
+            }
+
+            // match provided oldPassword with the one in database
+            const match = await bcrypt.compare(data.oldPassword.toString(), config[0].adminPassword)
+
+            if (!match) {
+                return res.status(400).json({ status: false, msg: "The old password is invalid" });
+            }
+
+            // 2. hash and update user model with the new password
+            const hashedPass = await bcrypt.hash(data.newPassword, 10);
+
+            const id = config[0].id
+            await Config.findOneAndUpdate({ _id: id }, {
+                $set: {
+                    adminPassword: hashedPass
+                }
+            });
+
+            return res.status(200).json({ status: true, msg: "Password changed successfully" });
 
         }
         catch (err) {

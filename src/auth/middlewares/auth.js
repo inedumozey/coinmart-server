@@ -54,7 +54,7 @@ module.exports = {
 
     adminAuth: async (req, res, next) => {
         try {
-            const authToken = req.headers["authorization"];
+            const authToken = req.headers["authorization-admin"];
 
             if (!authToken) {
                 return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })
@@ -103,7 +103,7 @@ module.exports = {
 
     supperAdminAuth: async (req, res, next) => {
         try {
-            const authToken = req.headers["authorization"];
+            const authToken = req.headers["authorization-admin"];
 
             if (!authToken) {
                 return res.status(402).json({ status: false, msg: "You are not authorized, please login as admin" })

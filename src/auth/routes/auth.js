@@ -19,8 +19,6 @@ route.get("/verify-email", authCrtl.verifyAccount);
 
 route.post("/signin", authCrtl.signin);
 
-route.post("/admin-login", activatedUserAuth, authCrtl.adminLogin);
-
 route.get("/generate-accesstoken", authCrtl.generateAccesstoken);
 
 route.put('/reset-password', activatedUserAuth, authCrtl.resetPassword);

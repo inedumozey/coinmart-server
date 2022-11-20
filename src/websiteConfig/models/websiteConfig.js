@@ -14,6 +14,18 @@ const schema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        totalWithdrawal: {
+            type: Number,
+            default: 0
+        },
+        membersCountry: {
+            type: Number,
+            default: 0
+        },
+        totalDeposit: {
+            type: Number,
+            default: 0
+        },
         currency: {
             type: String,
             default: "USD"
@@ -102,7 +114,7 @@ const schema = new mongoose.Schema(
             type: Number,
             default: 0
         },
-        transferFactors: [],
+        transferableFactors: [],
 
         pendingWithdrawalDuration: {
             type: Number,
