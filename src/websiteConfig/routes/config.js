@@ -6,7 +6,7 @@ const route = express.Router()
 
 route.get("/", config.getConfig);
 route.put("/update", adminAuth, config.updateConfig);
-route.post("/admin-login", activatedUserAuth, config.adminLogin);
+route.post("/admin-login", config.adminLogin);
 route.put("/reset-admin-password", activatedUserAuth, supperAdminAuth, config.resetAdminPassword);
 
 module.exports = route;

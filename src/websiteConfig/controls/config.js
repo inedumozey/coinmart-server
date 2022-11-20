@@ -212,12 +212,12 @@ module.exports = {
             }
 
             // log the user in
-            const admintoken = generateAdminToken(user._id);
+            // const admintoken = generateAdminToken(user._id);
 
             return res.status(200).json({
                 status: true,
                 msg: "Your are logged in as admin",
-                admintoken,
+                // admintoken,
             })
         }
         catch (err) {

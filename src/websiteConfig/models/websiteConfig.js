@@ -75,11 +75,11 @@ const schema = new mongoose.Schema(
         },
         referralContestStarts: {
             type: String,
-            default: '2022-12-00T00:00'
+            default: "2022-11-19T05:24"
         },
         referralContestStops: {
             type: String,
-            default: '2022-12-00T00:00'
+            default: "2022-11-19T05:24"
         },
         referralContestPrizes: [],
         masterPlanAmountLimit: { // masterPlanMinAmount
