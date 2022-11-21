@@ -1,22 +1,21 @@
 const express = require("express")
 const investment = require('../controls/investment')
-const { adminAuth, verifiedUserAuth } = require("../../auth/middlewares/auth")
+const { adminAuth, supperAdminAuth, activatedUserAuth } = require("../../auth/middlewares/auth")
 
 const route = express.Router()
 
-route.get("/get-all-plans", investment.getAllPlans);
-route.get("/get-plan/:id", verifiedUserAuth, investment.getPlan);
-route.post("/set-plan", adminAuth, investment.setPlan);
-route.put("/update-plan/:id", adminAuth, investment.updatePlan);
-route.delete("/delete-plan/:id", adminAuth, investment.deletePlan);
-route.delete("/delete-all-Plans", adminAuth, investment.deleteAllPlans);
+route.get("/plans/", investment.getAllPlans);
+route.get("/plans/:id", activatedUserAuth, investment.getPlan);
+route.post("/plans/", activatedUserAuth, adminAuth, investment.setPlan);
+route.put("/plans/:id", activatedUserAuth, adminAuth, investment.updatePlan);
+route.delete("/plans/:id", activatedUserAuth, supperAdminAuth, investment.deletePlan);
+route.delete("/plans/", activatedUserAuth, supperAdminAuth, investment.deleteAllPlans);
 
-route.get("/get-all-investments", verifiedUserAuth, investment.getAllInvestments);
+route.get("/get-all-investments", activatedUserAuth, investment.getAllInvestments);
 route.get("/get-all-investments-admin", adminAuth, investment.getAllInvestments_admin);
-route.get("/get-investment/:id", verifiedUserAuth, investment.getInvestment);
-route.post("/invest/:id", verifiedUserAuth, investment.invest);
+route.get("/get-investment/:id", activatedUserAuth, investment.getInvestment);
+route.post("/invest/:id", activatedUserAuth, investment.invest);
 route.get("/resolve", investment.resolve);
-route.get("/resolve-in", investment.resolve_In);
 route.put("/resolve-manual/:id", adminAuth, investment.resolveManually);
 
 module.exports = route

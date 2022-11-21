@@ -66,7 +66,7 @@ app.use('/api/v1/auth', require("./src/auth/routes/auth"));
 app.use('/api/v1/profile', require("./src/profile/routes/profile"));
 app.use('/api/v1/config', require('./src/websiteConfig/routes/config'));
 // app.use('/api/v1/transfer',  require('./src/internalTransfer/routes/internalTransfer')); 
-// app.use('/api/v1/investment',  require('./src/investment/routes/investment')); 
+app.use('/api/v1/investment', require('./src/investment/routes/investment'));
 app.use('/api/v1/referral', require('./src/referral/routes/referral'));
 // app.use('/api/v1/', require('./src/deposit/routes/deposit')); 
 // app.use('/api/v1/withdrawal',  require('./src/withdrawal/routes/withdrawal')); 

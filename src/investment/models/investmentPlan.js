@@ -8,7 +8,13 @@ const schema = new mongoose.Schema(
             trim: true,
             unique: true,
         },
-        amount: {
+        minAmount: {
+            type: Number,
+            default: 0,
+            required: true,
+            trim: true
+        },
+        maxAmount: {
             type: Number,
             default: 0,
             required: true,
@@ -16,7 +22,6 @@ const schema = new mongoose.Schema(
         },
         currency: {
             type: String,
-            default: 'SEC',
             trim: true
         },
         lifespan: {
@@ -33,11 +38,7 @@ const schema = new mongoose.Schema(
             type: Number,
             required: true,
             trim: true
-        },
-        pointRewards: {
-            type: Number,
-            trim: true
-        },
+        }
     },
     {
         timestamps: true

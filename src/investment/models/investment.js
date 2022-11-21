@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-const {ObjectId} = mongoose.Schema.Types
+const { ObjectId } = mongoose.Schema.Types
 
 const schema = new mongoose.Schema(
-    {   
+    {
         type: {
             type: String,
             required: true,
@@ -27,10 +27,6 @@ const schema = new mongoose.Schema(
             type: Number,
             required: true,
         },
-        currentBalance: {
-            type: Number,
-            required: true,
-        },
         rewarded: {
             type: Boolean,
             default: false
@@ -41,9 +37,6 @@ const schema = new mongoose.Schema(
         },
         currency: {
             type: String,
-            default: 'SEC',
-            required: true,
-            trim: true
         },
         isActive: {
             type: Boolean,
