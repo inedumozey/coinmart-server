@@ -64,14 +64,16 @@ module.exports = {
             const currency = config && config[0].currency
 
             // validate form input
-            if (!data.type || !data.maxAmount || !data.minAmount || !data.lifespan || !data.point || !data.returnPercentage) {
+            if (!req.body.type || !req.body.maxAmount || !req.body.minAmount || !req.body.lifespan || !req.body.point || !req.body.returnPercentage) {
                 return res.status(400).json({ status: false, msg: "All fields are required" });
             }
 
             if (data.maxAmount < 0 || data.minAmount < 0 || data.lifespan < 0 || data.point < 0 || data.returnPercentage < 0) {
                 return res.status(400).json({ status: false, msg: "Negative value found!" });
             }
-            if (data.minAmount > data.maxAmount) {
+
+            // minAmount cannot be more than maxAmount except when the maxAmount = 0
+            if (data.maxAmount > 0 && data.minAmount > data.maxAmount) {
                 return res.status(400).json({ status: false, msg: "Minimun amount cannot be more than Maximun amount" });
             }
 
@@ -120,14 +122,16 @@ module.exports = {
             const currency = config && config[0].currency
 
             // validate form input
-            if (!data.type || !data.maxAmount || !data.minAmount || !data.lifespan || !data.point || !data.returnPercentage) {
+            if (!req.body.type || !req.body.maxAmount || !req.body.minAmount || !req.body.lifespan || !req.body.point || !req.body.returnPercentage) {
                 return res.status(400).json({ status: false, msg: "All fields are required" });
             }
 
             if (data.maxAmount < 0 || data.minAmount < 0 || data.lifespan < 0 || data.point < 0 || data.returnPercentage < 0) {
                 return res.status(400).json({ status: false, msg: "Negative value found!" });
             }
-            if (data.minAmount > data.maxAmount) {
+
+            // minAmount cannot be more than maxAmount except when the maxAmount = 0
+            if (data.maxAmount > 0 && data.minAmount > data.maxAmount) {
                 return res.status(400).json({ status: false, msg: "Minimun amount cannot be more than Maximun amount" });
             }
 
@@ -228,7 +232,12 @@ module.exports = {
             }
 
             // check if amount is more or less than the plan amount
-            if (data.amount < plan.minAmount || data.amount > plan.maxAmount) {
+            if (data.amount < plan.minAmount) {
+                return res.status(400).json({ status: false, msg: "Invalid amount" })
+            }
+
+            // all plans with maximun of 0 is regarded as unlimited plan 
+            if (plan.maxAmount > 0 && data.amount > plan.maxAmount) {
                 return res.status(400).json({ status: false, msg: "Invalid amount" })
             }
 
