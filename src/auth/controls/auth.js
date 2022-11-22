@@ -4,6 +4,7 @@ const Config = mongoose.model("Config");
 const Profile = mongoose.model("Profile")
 const ReferralContest = mongoose.model("ReferralContest");
 const ReferralHistory = mongoose.model('ReferralHistory');
+const Investment = mongoose.model('Investment');
 const PasswordReset = mongoose.model('PasswordReset');
 require("dotenv").config();
 
@@ -528,7 +529,7 @@ module.exports = {
                 return res.status(401).json({ status: true, msg: "User's account is not verifeid" });
             }
 
-            if (user.role === "USER") {
+            if (user.role?.toLowerCase() === "user") {
                 // update the user with the phone number
                 const data = await User.findByIdAndUpdate({ _id: id }, {
                     $set: {
@@ -568,7 +569,7 @@ module.exports = {
                 return res.status(404).json({ status: false, msg: "User not found" })
             }
             if (!user_.isBlocked) {
-                if (user_.isAdmin) {
+                if (user_.role?.toLowerCase() === 'admin') {
                     return res.status(400).json({ status: false, msg: "Admin's account cannot be blocked" })
 
                 } else {
