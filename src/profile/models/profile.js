@@ -5,7 +5,7 @@ const { Schema } = mongoose
 const schema = new Schema({
     profilePicUrl: {
         type: String,
-        default: null
+        default: "https://api.multiavatar.com/popo.svg"
     },
     profilePicPublicId: {
         type: String,

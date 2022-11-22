@@ -5,11 +5,11 @@ const { adminAuth, activatedUserAuth, supperAdminAuth } = require("../middleware
 const route = express.Router()
 
 // route.get("/authorize", authCrtl.authorize);
-route.get("/get-all-users", adminAuth, authCrtl.getUsers);
+route.get("/get-users", activatedUserAuth, adminAuth, authCrtl.getUsers);
 
 route.get("/get-profile", activatedUserAuth, authCrtl.getProfile);
 
-route.get("/get-user/:id", adminAuth, authCrtl.getUser);
+route.get("/get-users/:id", activatedUserAuth, adminAuth, authCrtl.getUser);
 
 route.post("/signup", authCrtl.signup);
 
@@ -27,13 +27,13 @@ route.post("/forgot-password", authCrtl.forgotPassword);
 
 route.put('/verify-forgot-password', authCrtl.verifyForgotPassword);
 
-route.put('/toggle-admin/:id', supperAdminAuth, authCrtl.toggleAdmin)
+route.put('/toggle-admin/:id', activatedUserAuth, adminAuth, authCrtl.toggleAdmin)
 
-route.put('/toggle-block-user/:id', adminAuth, authCrtl.toggleBlockUser)
+route.put('/toggle-block-user/:id', activatedUserAuth, adminAuth, authCrtl.toggleBlockUser)
 
-route.delete('/delete-many-accounts', supperAdminAuth, authCrtl.deleteManyAccounts)
+route.put('/delete-many-accounts', activatedUserAuth, supperAdminAuth, authCrtl.deleteManyAccounts)
 
-route.delete('/delete-all-accounts', supperAdminAuth, authCrtl.deleteAllAccounts)
+route.put('/delete-all-accounts', activatedUserAuth, supperAdminAuth, authCrtl.deleteAllAccounts)
 
 
 module.exports = route

@@ -33,7 +33,7 @@ module.exports = {
             return res.status(200).json({ status: true, msg: "successfull", data })
         }
         catch (err) {
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support" })
+            return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer support" })
         }
     },
 
@@ -42,7 +42,7 @@ module.exports = {
             const { id } = req.params;
 
             //find user by id, or email or username
-            const data = await User.findOne({ $or: [{ _id: id }, { id }, { username: id }] })
+            const data = await User.findOne({ $or: [{ _id: id }, { username: id }] })
                 .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
                 .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
                 .populate({ path: 'profile' })
@@ -562,12 +562,6 @@ module.exports = {
     toggleBlockUser: async (req, res) => {
         try {
             let { id } = req.params
-
-            //check if id is mongoose valid id
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(404).json({ status: false, msg: "User not found" })
-            }
-
             // Find and block user, user most not be the admin
             const user_ = await User.findOne({ _id: id })
             if (!user_) {
@@ -600,7 +594,6 @@ module.exports = {
 
     deleteManyAccounts: async (req, res) => {
         try {
-
             // find these users that are not admin
             const users = await User.find({ $and: [{ _id: req.body.id }, { role: 'USER' }] })
 
@@ -611,7 +604,7 @@ module.exports = {
             }
 
             // Find and delete the account
-            const user = await User.deleteMany({ _id: id })
+            await User.deleteMany({ _id: id })
 
             // delete from Contest collection
             await ReferralContest.deleteMany({ userId: id })
@@ -620,18 +613,18 @@ module.exports = {
             await ReferralHistory.deleteMany({ referrerId: id })
 
             // delete from profile collection
-            await Profile.deleteMany({ userId: id })
+            await Profile.deleteMany({ userId: id });
+
+            // delete his investment hx
+            await Investment.deleteMany({ userId_: id });
 
             // delete his withdrawal hx
-            //...await User.deleteMany({userId_: id})
+            // await User.deleteMany({userId_: id})
 
             // delete his deposit hx
             //...await User.deleteMany({userId_: id})
 
-            // delete his investment hx
-            //...await User.deleteMany({userId_: id})
-
-            return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted`, data: id });
+            return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted` });
 
         }
         catch (err) {

@@ -374,50 +374,6 @@ module.exports = {
         }
     },
 
-    resolveManually: async (req, res) => {
-        try {
-            const { id } = req.params;
-            // update the investment database, 
-            const investment = await Investment.findOne({ _id: id });
-            // update the user
-            const user = await User.findOne({ _id: investment.userId })
-
-            if (investment.isActive) {
-                await Investment.findOneAndUpdate({ _id: id }, {
-                    $set: {
-                        rewarded: true,
-                        isActive: false,
-                        // currentBalance: (user.amount + investment.rewards).toFixed(8)
-                    }
-                }, { new: true })
-
-                await User.findOneAndUpdate({ _id: investment.userId }, {
-                    $set: {
-                        amount: (user.amount + investment.rewards).toFixed(8)
-                    }
-                }, { new: true })
-
-                if (user.active == 1 || user.active == 2) {
-                    // update the users account with the amount he invested with and the rewards
-                    await User.findOneAndUpdate({ _id: investment.userId }, {
-                        $set: {
-                            active: user.active - 1,
-                        }
-                    }, { new: true })
-                }
-                const investments = await Investment.find({}).populate({ path: 'userId', select: ['_id', 'email', 'amount', 'username'] }).sort({ createdAt: -1 });
-                return res.status(200).json({ status: true, msg: "successful", data: investments })
-            }
-            else {
-                const investments = await Investment.find({}).populate({ path: 'userId', select: ['_id', 'email', 'amount', 'username'] }).sort({ createdAt: -1 });
-                return res.status(200).json({ status: true, msg: "successful", data: investments })
-            }
-        }
-        catch (err) {
-            return res.status(500).json({ status: false, msg: err.message })
-        }
-    },
-
     getAllInvestments: async (req, res) => {
         try {
 
@@ -524,7 +480,8 @@ module.exports = {
                     await Investment.updateMany({ _id: maturedInvestment.id }, {
                         $set: {
                             rewarded: true,
-                            isActive: false
+                            isActive: false,
+                            status: 'Matured'
                         }
                     })
 
@@ -543,6 +500,41 @@ module.exports = {
                 return res.status(200).json({ status: true, msg: "successful" })
             }
 
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
+    },
+
+    resolveManually: async (req, res) => {
+        try {
+            const { id } = req.params;
+            // update the investment database, 
+            const investment = await Investment.findOne({ _id: id });
+
+            // update the user
+            const user = await User.findOne({ _id: investment.userId });
+
+            if (investment.isActive) {
+                await Investment.findOneAndUpdate({ _id: id }, {
+                    $set: {
+                        rewarded: true,
+                        isActive: false,
+                        status: 'Matured'
+                    }
+                })
+
+                await User.findOneAndUpdate({ _id: investment.userId }, {
+                    $set: {
+                        amount: (user.amount + investment.rewards).toFixed(8)
+                    }
+                })
+
+                return res.status(200).json({ status: true, msg: "successful" })
+            }
+            else {
+                return res.status(200).json({ status: true, msg: "successful" })
+            }
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message })

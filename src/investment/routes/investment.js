@@ -12,10 +12,10 @@ route.delete("/plans/:id", activatedUserAuth, supperAdminAuth, investment.delete
 route.delete("/plans/", activatedUserAuth, supperAdminAuth, investment.deleteAllPlans);
 
 route.get("/get-all-investments", activatedUserAuth, investment.getAllInvestments);
-route.get("/get-all-investments-admin", adminAuth, investment.getAllInvestments_admin);
+route.get("/get-all-investments-admin", activatedUserAuth, adminAuth, investment.getAllInvestments_admin);
 route.get("/get-investment/:id", activatedUserAuth, investment.getInvestment);
 route.post("/invest/:id", activatedUserAuth, investment.invest);
 route.get("/resolve", investment.resolve);
-route.put("/resolve-manual/:id", adminAuth, investment.resolveManually);
+route.put("/resolve-manual/:id", activatedUserAuth, adminAuth, investment.resolveManually);
 
 module.exports = route

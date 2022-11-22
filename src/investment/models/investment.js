@@ -38,6 +38,10 @@ const schema = new mongoose.Schema(
         currency: {
             type: String,
         },
+        status: {
+            type: String,
+            default: 'Active'
+        },
         isActive: {
             type: Boolean,
             default: true
