@@ -596,36 +596,40 @@ module.exports = {
     deleteManyAccounts: async (req, res) => {
         try {
             // find these users that are not admin
-            const users = await User.find({ $and: [{ _id: req.body.id }, { role: 'USER' }] })
+            const users = await User.find({ $and: [{ _id: req.body.id }, { role: 'USER' }] }).select('_id')
 
             // loop through and get their ids
             let id = []
+            let profileId = []
             for (let user of users) {
                 id.push(user.id)
+                profileId.push(user.profile)
             }
 
-            // Find and delete the account
+
+            // delete all users
             await User.deleteMany({ _id: id })
 
-            // delete from Contest collection
+            // delete from profile collection
+            await Profile.deleteMany({ _id: profileId })
+
+
+            // delete from Contest Database
             await ReferralContest.deleteMany({ userId: id })
 
             // delete from referral history collection
             await ReferralHistory.deleteMany({ referrerId: id })
 
-            // delete from profile collection
-            await Profile.deleteMany({ userId: id });
+            // delete their withdrawal hx
+            //...await User.findByIdAndDelete({userId_: id})
 
-            // delete his investment hx
-            await Investment.deleteMany({ userId_: id });
+            // delete their deposit hx
+            //...await User.findByIdAndDelete({userId_: id})
 
-            // delete his withdrawal hx
-            // await User.deleteMany({userId_: id})
+            // delete their investment hx
+            //...await User.findByIdAndDelete({userId_: id})
 
-            // delete his deposit hx
-            //...await User.deleteMany({userId_: id})
-
-            return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted` });
+            return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted`, data: id });
 
         }
         catch (err) {
@@ -638,7 +642,7 @@ module.exports = {
         try {
 
             // find all users that are not admin
-            const users = await User.find({ role: 'USER' })
+            const users = await User.find({ role: 'USER' }).select('_id')
 
             // loop through and get their ids
             let id = []
