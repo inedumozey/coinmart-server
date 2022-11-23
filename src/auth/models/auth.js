@@ -58,6 +58,10 @@ const schema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
+        investmentCount: {
+            type: Number,
+            default: 0
+        },
         referralCode: {
             type: String,
             require: true,

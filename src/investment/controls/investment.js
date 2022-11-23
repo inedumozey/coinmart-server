@@ -207,6 +207,7 @@ module.exports = {
             const config = await Config.find({});
             const currency = config && config[0].currency
             const referralBonusPercentage = config && config[0].referralBonusPercentage
+            const referralBonusLimit = config && config[0].referralBonusLimit
             const investmentLimits = config && config[0].investmentLimits
             const allowInvestment = config && config[0].allowInvestment;
             const allowReferralContest = config && config[0].allowReferralContest
@@ -221,7 +222,7 @@ module.exports = {
                 amount: Number(DOMPurify.sanitize(req.body.amount)),
             }
 
-            // get the user from user database
+            // get the logged in user from user database
             const user = await User.findOne({ _id: userId })
 
             // check if the plan exist
@@ -314,8 +315,8 @@ module.exports = {
                         }
                     });
 
-                    // Check ths user collection in User adatabse to see if this is his/her first investment (hasInvested: false). This will make sure referral bonus is returned to referrer only once (first investment) for those that are someone else's referree
-                    if (!user.hasInvested) {
+                    // Check ths user collection in User adatabse to see if the number of times he has investment is not more thanreferralBonusLimit (number of times he will returns referral bonus to his referrer)
+                    if (referralBonusLimit > user.investmentCount) {
 
                         // check if user was referred by another user, then return their referral bonus to this referrer using their first investment (this is only for the first investment)
                         if (user.referrerId) {
@@ -331,19 +332,16 @@ module.exports = {
                                 $set: { amount: (referrerUser.amount + referralBonus).toFixed(8) }
                             })
 
-                            // save new collection in the referral History database
-                            const newReferralHistory = new ReferralHistory({
-                                referrerId: user.referrerId,
-                                referreeId: userId,
-                                referreeUsername: userId.username,
-                                rewards: referralBonus.toFixed(8),
-                                currency
+                            // update referral History database
+                            await ReferralHistory.findOneAndUpdate({ $and: [{ referrerId: user.referrerId }, { referreeId: userId }] }, {
+                                $inc: {
+                                    rewards: referralBonus.toFixed(8),
+                                }
                             })
 
-                            await newReferralHistory.save()
-
                             // update the referral ReferralContest collection if allowContest is true
-                            if (allowContest) {
+                            if (!allowContest) {
+                                console.log({ work: plan.point })
                                 await ReferralContest.findOneAndUpdate({ userId: user.referrerId }, {
                                     $inc: {
                                         point: plan.point,
@@ -355,15 +353,16 @@ module.exports = {
                                 })
                             }
                         }
-
-
-                        // update referree user and change hasInvested to true
-                        await User.findByIdAndUpdate({ _id: userId }, {
-                            $set: { hasInvested: true }
-                        })
                     }
 
-                    const investmentData = await Investment.findOne({ _id: newInvestment.id });
+                    // update referree user and change hasInvested to true and increment investmentCount by 1
+                    await User.findByIdAndUpdate({ _id: userId }, {
+                        $set: { hasInvested: true }
+                    })
+
+                    await User.findByIdAndUpdate({ _id: userId }, {
+                        $inc: { investmentCount: 1 }
+                    })
 
                     return res.status(200).json({ status: true, msg: `You have started investing for ${plan.type}` })
                 }

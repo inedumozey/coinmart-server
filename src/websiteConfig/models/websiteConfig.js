@@ -53,17 +53,13 @@ const schema = new mongoose.Schema(
             type: Number,
             default: 10
         },
+        referralBonusLimit: {
+            type: Number,
+            default: 1
+        },
         referralContestPercentage: {
             type: Number,
             default: 0
-        },
-        referralBonusPercentageForMasterPlan: {
-            type: Number,
-            default: 0.3
-        },
-        referralBonusMaxCountForMasterPlan: {
-            type: Number,
-            default: 30
         },
         allowReferralContest: {
             type: Boolean,
@@ -75,18 +71,13 @@ const schema = new mongoose.Schema(
         },
         referralContestStarts: {
             type: String,
-            default: "2022-11-19T05:24"
+            default: null
         },
         referralContestStops: {
             type: String,
-            default: "2022-11-19T05:24"
+            default: null
         },
         referralContestPrizes: [],
-        masterPlanAmountLimit: { // masterPlanMinAmount
-            type: Number,
-            default: 200000
-        },
-
         minWithdrawableLimit: {
             type: Number,
             default: 0

@@ -58,8 +58,6 @@ require('./src/deposit/models/deposit')
 require('./src/withdrawal/models/withdrawal')
 require('./src/notifications/models/notification')
 require('./src/testimonials/models/testimonials')
-require('./src/transactions/models/transactions')
-
 
 // // routes
 app.use('/api/v1/auth', require("./src/auth/routes/auth"));
@@ -72,7 +70,6 @@ app.use('/api/v1/referral', require('./src/referral/routes/referral'));
 // app.use('/api/v1/withdrawal',  require('./src/withdrawal/routes/withdrawal')); 
 // app.use('/api/v1/notification',  require('./src/notifications/routes/notification')); 
 // app.use('/api/v1/testimonials',  require('./src/testimonials/routes/testimonials')); 
-// app.use('/api/v1/transactions',  require('./src/transactions/routes/transactions')); 
 // app.use('/api/v1/message',  require('./src/message/routes/message')); 
 // app.use('/api/v1/referral-contest',  require('./src/referralContest/routes/referralContest')); 
 // app.use('/api/v1/payusers',  require('./src/payuser/routes/payusers')); 
