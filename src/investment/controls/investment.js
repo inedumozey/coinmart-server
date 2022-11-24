@@ -215,7 +215,7 @@ module.exports = {
             const referralContestStops = config && config[0].referralContestStops
 
             if (!allowInvestment) {
-                return res.status(400).json({ status: false, msg: "Not available at the moment, check back shortly" })
+                return res.status(400).json({ status: false, msg: "Currenctly not available, please try again later later" })
             }
 
             const data = {

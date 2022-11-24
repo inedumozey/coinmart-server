@@ -1,26 +1,24 @@
 const mongoose = require('mongoose')
 const InternalTransfer = mongoose.model("InternalTransfer");
 const User = mongoose.model("User");
-const Transactions = mongoose.model("Transactions");
 const Config = mongoose.model("Config");
 require("dotenv").config();
 const createDOMPurify = require('dompurify');
-const {JSDOM} = require('jsdom');
+const { JSDOM } = require('jsdom');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
 
 
-module.exports ={
-        
-    checkUser: async (req, res)=> {
-        try{
+module.exports = {
+
+    verifyAccountNo: async (req, res) => {
+        try {
             const userId = req.user
 
             // sanitize all elements from the client, incase of fodgery
             const data = {
-                amount:  Number(DOMPurify.sanitize(req.body.amount)),
-                accountNumber:  DOMPurify.sanitize(req.body.accountNumber),
+                accountNumber: DOMPurify.sanitize(req.body.accountNumber),
             }
 
             // get currency, maxWithdrawalLimit, minWithdrawalLimit, withdrawalCommomDifference and allowTransfer from config data if exist otherwise set to the one in env
@@ -28,79 +26,51 @@ module.exports ={
             // get all config
             const config = await Config.find({});
 
-            const allowTransfer = config && config.length >= 1 && config[0].nativeCurrency ? config[0].allowTransfer : (process.env.ALLOW_TRANSFER).toLowerCase();
+            const allowTransfer = config && config[0].allowTransfer
 
-            const currency = config && config.length >= 1 && config[0].nativeCurrency ? config[0].nativeCurrency : (process.env.NATIVE_CURRENCY).toUpperCase();
-
-            const transferFactors = config && config.length >= 1 && config[0].transferFactors ? config[0].transferFactors : resolveTransferFactors();
-
-            if(allowTransfer !== 'yes'){
-                return res.status(402).json({ status: false, msg: "Transfer is not currenctly available, please check later"})
+            if (!allowTransfer) {
+                return res.status(402).json({ status: false, msg: "Currenctly not available, please try again later later" })
             }
 
-            if(!data.amount || !data.accountNumber){
-                return res.status(400).json({ status: false, msg: "All fields are required"})
-            }
-
-             // resolve transfer factors incase it's not in the database
-             const resolveTransferFactors =()=>{
-                let factors=[]
-                const maxTransferLimit = process.env.MAX_TRANSFER_LIMIT ? Number(process.env.MAX_TRANSFER_LIMIT) : 100000;
-                const minTransferLimit = process.env.MIN_TRANSFER_LIMIT ? Number(process.env.MIN_TRANSFER_LIMIT) : 5000;
-                const transferCommonDiff = process.env.TRANSFER_COMMON_DIFF ? Number(process.env.TRANSFER_COMMON_DIFF) : 5000;
-
-                for(let i=minTransferLimit; i<=maxTransferLimit; i=i+transferCommonDiff){
-                    factors.push(i)
-                }
-                return factors
-            }
-
-            if(!transferFactors.includes(data.amount)){
-                return res.status(400).json({ status: false, msg: "Invalid amount"});
+            if (!data.accountNumber) {
+                return res.status(400).json({ status: false, msg: "Account number is required" })
             }
 
             // get sender's total amount
-            const user = await User.findOne({_id: userId})
-            if(!user){
-                return res.status(500).json({ status: false, msg: "User not found!"})
-            }
-
-            // check sender's amount, if less than what he is transfering, send error
-            if(Number(data.amount) > Number(user.amount)){
-                return res.status(400).json({ status: false, msg: "Insufficient balance"})
+            const user = await User.findOne({ _id: userId })
+            if (!user) {
+                return res.status(500).json({ status: false, msg: "User not found!" })
             }
 
             // get the receiver using the account number
-            const rUser = await User.findOne({accountNumber: data.accountNumber});
+            const rUser = await User.findOne({ accountNumber: data.accountNumber });
 
             // validate the account number
-            if(!rUser){
-                return res.status(400).json({ status: false, msg: "Invalid account number"})
+            if (!rUser) {
+                return res.status(400).json({ status: false, msg: "Invalid account number" })
             };
 
             // check to be sure account number does not belongs to the sender
-            if(rUser.accountNumber === user.accountNumber){
-                return res.status(400).json({ status: false, msg: "Owner's account number"})
+            if (rUser.accountNumber === user.accountNumber) {
+                return res.status(400).json({ status: false, msg: "Owner's account number" })
             }
 
             const info = {
                 username: rUser.username,
                 email: rUser.email,
                 accountNumber: rUser.accountNumber,
-                amount: data.amount,
-                currency: currency
             }
 
             // send confirmation msg to the sender
-            return res.status(200).json({ status: true, msg: "check info", data: info})        
+            return res.status(200).json({ status: true, msg: "Valid Account Number", data: { ...info } })
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer support" })
         }
     },
 
-    payUser: async (req, res)=> {
-        try{
+    payUser: async (req, res) => {
+        try {
             const userId = req.user
 
             // sanitize all elements from the client, incase of fodgery
@@ -109,183 +79,154 @@ module.exports ={
                 accountNumber: DOMPurify.sanitize(req.body.accountNumber),
             }
 
-            if(!data.amount || !data.accountNumber){
-                return res.status(400).json({ status: false, msg: "All fields are required"})
+            if (!data.amount || !data.accountNumber) {
+                return res.status(400).json({ status: false, msg: "All fields are required" })
             }
 
             // check transfer factors
 
-            // resolve transfer factors incase it's not in the database
-            const resolveTransferFactors =()=>{
-                let factors=[]
-                const maxTransferLimit = process.env.MAX_TRANSFER_LIMIT ? Number(process.env.MAX_TRANSFER_LIMIT) : 100000;
-                const minTransferLimit = process.env.MIN_TRANSFER_LIMIT ? Number(process.env.MIN_TRANSFER_LIMIT) : 5000;
-                const transferCommonDiff = process.env.TRANSFER_COMMON_DIFF ? Number(process.env.TRANSFER_COMMON_DIFF) : 5000;
-
-                for(let i=minTransferLimit; i<=maxTransferLimit; i=i+transferCommonDiff){
-                    factors.push(i)
-                }
-                return factors
-            }
-
-            // get currency, maxTransferLimit, minTransferLimit and transferCommonDifference from config data if exist otherwise set to the one in env
             // get all config
             const config = await Config.find({});
 
-            const currency = config && config.length >= 1 && config[0].nativeCurrency ? config[0].nativeCurrency : process.env.NATIVE_CURRENCY;
+            const allowTransfer = config && config[0].allowTransfer
+            const currency = config && config[0].currency
+            const transferableFactors = config && config[0].transferableFactors
 
-            const transferFactors = config && config.length >= 1 && config[0].transferFactors ? config[0].transferFactors : resolveTransferFactors();
-
-            // check for transfer factors
-            if(!transferFactors.includes(data.amount)){
-                return res.status(400).json({ status: false, msg: "Invalid amount"});
+            if (!allowTransfer) {
+                return res.status(402).json({ status: false, msg: "Currenctly not available, please try again later later" })
             }
 
-             // get sender's total amount
-            const user = await User.findOne({_id: userId})
-            if(!user){
-                return res.status(400).json({ status: false, msg: "User not found!"})
+            // check for transfer factors
+            // if transferFactors is 1, users can transfer any amount otherwise, users can only transfer amount in the transferFactors array
+            if (transferableFactors.length !== 1 && transferableFactors[0] !== 1) {
+                if (!transferableFactors.includes(data.amount)) {
+                    return res.status(400).json({ status: false, msg: "Invalid amount" });
+                }
+            }
+
+            // get sender's total amount
+            const user = await User.findOne({ _id: userId })
+            if (!user) {
+                return res.status(400).json({ status: false, msg: "User not found!" })
             }
 
             // check sender's amount, if less than what he is transfering, send error
-            if(Number(data.amount) >Number(user.amount)){
-                return res.status(400).json({ status: false, msg: "Insufficient balance"})
+            if (Number(data.amount) > Number(user.amount)) {
+                return res.status(400).json({ status: false, msg: "Insufficient balance" })
             }
 
-            const rUser = await User.findOne({accountNumber: data.accountNumber});
+            const rUser = await User.findOne({ accountNumber: data.accountNumber });
 
             // validate the account number
-            if(!rUser){
-                return res.status(400).json({ status: false, msg: "Invalid account number"})
+            if (!rUser) {
+                return res.status(400).json({ status: false, msg: "Invalid account number" })
             };
 
             // check to be sure account number does not belongs to the sender
-            if(rUser.accountNumber === user.accountNumber){
-                return res.status(400).json({ status: false, msg: "Owner's account number"})
+            if (rUser.accountNumber === user.accountNumber) {
+                return res.status(400).json({ status: false, msg: "Owner's account number" })
             }
- 
+
             //.........................................................
 
             // handle transactions
             // 1. add the amount to the receiver's account
-            await User.findByIdAndUpdate({_id: rUser.id}, {$set: {
-                amount: (rUser.amount + data.amount).toFixed(8)
-            }}, {new: true})
+            await User.findByIdAndUpdate({ _id: rUser.id }, {
+                $set: {
+                    amount: (rUser.amount + data.amount).toFixed(8)
+                }
+            })
 
             // 2. remove the amount from sender's account
-            await User.findByIdAndUpdate({_id: userId}, {$set: {
-                amount: (user.amount - data.amount).toFixed(8)
-            }}, {new: true})
+            await User.findByIdAndUpdate({ _id: userId }, {
+                $set: {
+                    amount: (user.amount - data.amount).toFixed(8)
+                }
+            })
 
-            // 3 save data into internal transfer database (transaction) of the sender            
-
+            // 3 save the data into in internal transfer database (transaction) of the sender            
             const newInternalTransfer = new InternalTransfer({
-                sender: userId,
-                receiver: rUser.id,
+                senderId: userId,
+                senderUsername: user.username,
+                receiverId: rUser.id,
+                receiverUsername: rUser.username,
                 accountNumber: data.accountNumber,
                 amount: data.amount.toFixed(8),
                 currency,
-                status: "successful"
             })
 
             const newInternalTransfer_ = await newInternalTransfer.save();
-            
-            //save to transaction hx database
-            const NewTransactionHx = new Transactions({
-                type: 'transfer',
-                sender: userId,
-                receiver: rUser.id,
-                accountNumber: data.accountNumber,
-                amount: data.amount.toFixed(8),
-                currency,
-                status: "successful",
-                transactionId: newInternalTransfer_._id
-            })
 
-            await NewTransactionHx.save();
+            const data_ = await InternalTransfer.findOne({ _id: newInternalTransfer_.id }).populate({ path: 'senderId', select: ['_id', 'username', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'email'] });
 
-            const data_ = await InternalTransfer.findOne({_id: newInternalTransfer_.id}).populate({path: 'sender', select: ['_id', 'username', 'email']}).populate({path: 'receiver', select: ['_id', 'username', 'email']});
-
-
-            return res.status(200).json({ status: true, msg: `Transaction successful`, data: data.amount}) 
+            return res.status(200).json({ status: true, msg: `Transaction successful`, data: data_ })
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: err.message})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
         }
     },
 
-    getAllTransactions: async (req, res)=> {
-        try{
-            const userId = req.user;
+    getAllTransactions_admin: async (req, res) => {
+        try {
 
-            // get the loggeduser to check if he is the admin
-            const loggeduser = await User.findOne({_id: userId})
-            
-            // if admin, send all the txns
-            if(loggeduser.isAdmin){
-                const txnsData = await InternalTransfer.find({}).populate({path: 'sender', select: ['_id', 'username', 'accountNumber', 'email']}).populate({path: 'receiver', select: ['_id', 'username', 'accountNumber', 'email']}).sort({createdAt: -1});
+            const data = await InternalTransfer.findOne().populate({ path: 'senderId', select: ['_id', 'username', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'email'] }).sort({ createdAt: -1 });
 
-                return res.status(200).send({status: true, msg: 'Successful', data: txnsData})
-            }
+            return res.status(200).send({ status: true, msg: 'Successful', data })
 
-            else{
-
-                return res.status(400).send({status: false, msg: 'Access denied'})
-            }
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.messsage || "Server error, please contact customer support" })
         }
     },
 
-    getAllTransactions_user: async (req, res)=> {
-        try{
+    getAllTransactions: async (req, res) => {
+        try {
             const userId = req.user;
 
-            const txnsData = await InternalTransfer.find({$or: [{sender: userId}, {receiver: userId}]}).populate({path: 'sender', select: ['_id', 'username', 'accountNumber', 'email']}).populate({path: 'receiver', select: ['_id', 'username', 'accountNumber', 'email']}).sort({createdAt: -1});
+            const data = await InternalTransfer.find({ $or: [{ senderId: userId }, { receiverId: userId }] }).populate({ path: 'senderId', select: ['_id', 'username', 'accountNumber', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'accountNumber', 'email'] }).sort({ createdAt: -1 });
 
-            return res.status(200).send({status: true, msg: 'Successful', data: txnsData, id: userId})
-            
+            return res.status(200).send({ status: true, msg: 'Successful', data })
+
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer support" })
         }
     },
 
-    getTransaction: async (req, res)=> {
-        try{
+    getTransaction: async (req, res) => {
+        try {
             const userId = req.user;
-            const {id} = req.params;
-
-            // check the id
-            if(!mongoose.Types.ObjectId.isValid(id)){
-                return res.status(400).json({status: false, msg: "Transaction not found"})
-            }
+            const { id } = req.params;
 
             // get the transaction hx
-            const txn = await InternalTransfer.findOne({_id: id});
-            if(!txn){
-                return res.status(400).json({status: false, msg: "Transaction not found"})
+            const data = await InternalTransfer.findOne({ $and: [{ _id: id }, { $or: [{ senderId: userId }, { receiverId: userId }] }] });
+
+            if (!data) {
+                return res.status(400).json({ status: false, msg: "Transaction not found" })
             }
 
-            // check if the loggeduser is the admin
-            const loggeduser = await User.findOne({_id: userId})
-            
-            // check if loggeduser was the one that did the transfer he requets for or the admin
-            if(txn.senderId.toString() === userId.toString() || txn.receiverId.toString() === userId.toString() || loggeduser.isAdmin){
-                const txnData = await InternalTransfer.findOne({_id: id}).populate({path: 'sender', select: ['_id', 'username', 'email']}).populate({path: 'receiver', select: ['_id', 'username', 'email']})
-
-                return res.status(200).send({status: true, msg: 'Successful', data: txnData})
-            }
-
-            // if none of the above, send error
-            else{
-                return res.status(400).send({status: false, msg: 'Access denied'})
-            }
-
+            return res.status(200).send({ status: true, msg: 'Successful', data })
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer support" })
+        }
+    },
+
+    getTransaction_admin: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // get the transaction hx
+            const data = await InternalTransfer.findOne({ _id: id });
+
+            if (!data) {
+                return res.status(400).json({ status: false, msg: "Transaction not found" })
+            }
+
+            return res.status(200).send({ status: true, msg: 'Successful', data })
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message || "Server error, please contact customer support" })
         }
     }
 }

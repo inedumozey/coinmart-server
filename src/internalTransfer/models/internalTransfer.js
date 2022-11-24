@@ -3,7 +3,7 @@ const { ObjectId } = mongoose.Schema.Types
 
 const schema = new mongoose.Schema(
     {
-        sender: {
+        senderId: {
             type: ObjectId,
             ref: 'User',
             required: true
@@ -12,7 +12,7 @@ const schema = new mongoose.Schema(
             type: String,
             required: true
         },
-        receiver: {
+        receiverId: {
             type: ObjectId,
             ref: 'User',
             required: true

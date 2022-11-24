@@ -8,7 +8,7 @@ route.get("/get-all-hx", activatedUserAuth, referral.getReferralHistories);
 
 route.get("/get-hx/:id", activatedUserAuth, referral.getReferralHistoriesById);
 
-route.put("/add-referral", activatedUserAuth, referral.addReferral);
+route.put("/add-refcode", activatedUserAuth, referral.addReferral);
 
 route.get("/contest/get-all", activatedUserAuth, referral.getAllReferralContest);
 
