@@ -62,6 +62,10 @@ const schema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        referralContestRewards: {
+            type: Number,
+            default: 0
+        },
         referralCode: {
             type: String,
             require: true,

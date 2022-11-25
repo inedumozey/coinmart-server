@@ -118,11 +118,7 @@ module.exports = {
                 html: text
             }
 
-            mailgunSetup.messages().send(email_data, (err, body) => {
-                if (err) {
-                    return res.status(400).json({ status: true, msg: err.message })
-                }
-            })
+            await mailgunSetup.messages().send(email_data)
 
             return res.status(200).json({ status: true, msg: `Your transaction is pending, It will be confirmed within ${pendingWithdrawalDuration} hours`, data: withdrawalData })
         }

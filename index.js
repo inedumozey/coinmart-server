@@ -74,7 +74,7 @@ app.use('/api/v1/withdrawal', require('./src/withdrawal/routes/withdrawal'));
 // app.use('/api/v1/testimonials',  require('./src/testimonials/routes/testimonials')); 
 // app.use('/api/v1/message',  require('./src/message/routes/message')); 
 // app.use('/api/v1/referral-contest',  require('./src/referralContest/routes/referralContest')); 
-// app.use('/api/v1/payusers',  require('./src/payuser/routes/payusers')); 
+app.use('/api/v1/payusers', require('./src/payuser/routes/payusers'));
 
 // normalize port
 const normalizePort = (val) => {

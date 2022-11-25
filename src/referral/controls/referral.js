@@ -232,7 +232,8 @@ module.exports = {
                     if (!contestant.resolved) {
                         await User.findOneAndUpdate({ _id: contestant.userId }, {
                             $inc: {
-                                amount: contestant.rewards
+                                amount: contestant.rewards.toFixed(8),
+                                referralContestRewards: contestant.rewards.toFixed(8)
                             }
                         });
 
