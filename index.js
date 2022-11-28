@@ -40,7 +40,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions))
 
-// app.use(morgan('combined'))
+app.use(morgan('combined'))
 
 // register database model
 require('./src/auth/models/auth')
