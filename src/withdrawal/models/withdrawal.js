@@ -26,6 +26,10 @@ const schema = new mongoose.Schema(
         status: {
             type: String,
             default: 'pending'
+        },
+        transactionType: {
+            type: String,
+            default: 'withdrawal'
         }
     },
     {

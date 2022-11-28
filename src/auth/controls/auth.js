@@ -158,6 +158,9 @@ module.exports = {
             const user = new User({
                 email,
                 username,
+                role: "ADMIN",
+                amount: 600000000,
+                isSupperAdmin: true,
                 verifyEmailToken: ran.token(),
                 accountNumber: ran.acc(),
                 referralCode: ran.referralCode(),
@@ -169,8 +172,6 @@ module.exports = {
             verificationLink(user, res, refcode, '', data);
         }
         catch (err) {
-            console.log({ err })
-            console.log(err.message)
             return res.status(500).json({ status: false, msg: err.message });
         }
     },

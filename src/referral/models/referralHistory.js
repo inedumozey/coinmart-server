@@ -21,6 +21,10 @@ const schema = new mongoose.Schema(
         },
         currency: {
             type: String,
+        },
+        type: {
+            type: String,
+            default: 'referral'
         }
     },
     {

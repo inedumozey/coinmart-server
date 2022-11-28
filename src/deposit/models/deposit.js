@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {ObjectId} = mongoose.Schema.Types
+const { ObjectId } = mongoose.Schema.Types
 
 const schema = new mongoose.Schema(
     {
@@ -10,25 +10,15 @@ const schema = new mongoose.Schema(
         code: {
             type: String
         },
-        tradeAmountExpected: {
+        amountExpected: {
             type: Number
         },
-        tradeAmountReceived: {
-            type: Number
-        },
-        tradeCurrency: {
-            type: String,
-            default: 'USD'
-        },
-        nativeAmountExpected: {
-            type: Number
-        },
-        nativeAmountReceived: {
+        amountReceived: {
             type: Number
         },
         currency: {
             type: String,
-            default: 'SEC'
+            required: true
         },
         link: {
             type: String
@@ -54,6 +44,10 @@ const schema = new mongoose.Schema(
         comment: {
             type: String,
             default: 'created'
+        },
+        transactionType: {
+            type: String,
+            default: 'deposit'
         }
     },
     {

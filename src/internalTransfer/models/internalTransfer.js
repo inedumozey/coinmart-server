@@ -36,6 +36,10 @@ const schema = new mongoose.Schema(
         currency: {
             type: String,
             required: true
+        },
+        transactionType: {
+            type: String,
+            default: 'transfer'
         }
     },
     {

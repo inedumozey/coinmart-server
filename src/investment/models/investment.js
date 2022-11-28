@@ -45,6 +45,10 @@ const schema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        },
+        transactionType: {
+            type: String,
+            default: 'investment'
         }
     },
     {

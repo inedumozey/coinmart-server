@@ -31,7 +31,12 @@ module.exports = {
             const currency = config && config[0].currency
             const withdrawableCoins = config && config[0].withdrawableCoins
             const withdrawableFactors = config && config[0].withdrawableFactors
-            const pendingWithdrawalDuration = config && config[0].pendingWithdrawalDuration
+            const pendingWithdrawalDuration = config && config[0].pendingWithdrawalDuration;
+            const allowWithdrawal = config && config[0].allowWithdrawal;
+
+            if (!allowWithdrawal) {
+                return res.status(400).json({ status: false, msg: "Currenctly not available, please try again later later" })
+            }
 
             if (!data.amount || !data.walletAddress) {
                 return res.status(400).json({ status: false, msg: "All fields are required" });

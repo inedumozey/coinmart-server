@@ -68,7 +68,7 @@ app.use('/api/v1/config', require('./src/websiteConfig/routes/config'));
 app.use('/api/v1/transfer', require('./src/internalTransfer/routes/internalTransfer'));
 app.use('/api/v1/investment', require('./src/investment/routes/investment'));
 app.use('/api/v1/referral', require('./src/referral/routes/referral'));
-// app.use('/api/v1/', require('./src/deposit/routes/deposit')); 
+app.use('/api/v1/', require('./src/deposit/routes/deposit'));
 app.use('/api/v1/withdrawal', require('./src/withdrawal/routes/withdrawal'));
 // app.use('/api/v1/notification',  require('./src/notifications/routes/notification')); 
 // app.use('/api/v1/testimonials',  require('./src/testimonials/routes/testimonials')); 
