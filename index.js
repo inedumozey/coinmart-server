@@ -57,7 +57,7 @@ require('./src/investment/models/investment')
 require('./src/deposit/models/deposit')
 require('./src/withdrawal/models/withdrawal')
 require('./src/notifications/models/notification')
-require('./src/testimonials/models/testimonials')
+// require('./src/testimonials/models/testimonials')
 
 // routes
 app.use('/api/v1/admin', require("./src/history/admin/routes"));
