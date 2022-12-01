@@ -41,8 +41,10 @@ module.exports = {
         }
     },
 
-    getAdd_Admin: async (req, res) => {
+    getAll_Admin: async (req, res) => {
+
         try {
+
             const data = await Notification.find({}).sort({ createdAt: -1 });
             return res.status(200).json({ status: true, msg: "Successful", data });
         }
@@ -51,9 +53,9 @@ module.exports = {
         }
     },
 
-    getAdd_Admin: async (req, res) => {
+    getOne_Admin: async (req, res) => {
         try {
-            const data = await Notification.findOne({ _id: req.params });
+            const data = await Notification.findOne({ _id: req.params.id });
             return res.status(200).json({ status: true, msg: "Successful", data });
         }
         catch (err) {
@@ -88,6 +90,30 @@ module.exports = {
         }
     },
 
+    // user delete notification
+    deleteNotification: async (req, res) => {
+        try {
+            const userId = req.user;
+            const { id } = req.params
 
+            // update the the user
 
+            await User.findOneAndUpdate({ _id: userId }, {
+                $pull: {
+                    newNotifications: id
+                }
+            })
+
+            await User.findOneAndUpdate({ _id: userId }, {
+                $pull: {
+                    readNotifications: id
+                }
+            })
+
+            return res.status(200).json({ status: true, msg: "Deleted", data: id });
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
+    },
 }
