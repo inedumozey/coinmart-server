@@ -3,70 +3,91 @@ const Notification = mongoose.model("Notification");
 const User = mongoose.model("User");
 require("dotenv").config();
 const createDOMPurify = require('dompurify');
-const {JSDOM} = require('jsdom');
+const { JSDOM } = require('jsdom');
 
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window)
 
 
-module.exports ={
-        
-    set: async (req, res)=> {
-        try{
+module.exports = {
+
+    push: async (req, res) => {
+        try {
             const data = {
-                title:  DOMPurify.sanitize(req.body.title),
-                body: DOMPurify.sanitize(req.body.body)
+                subject: DOMPurify.sanitize(req.body.subject),
+                text: DOMPurify.sanitize(req.body.text)
             }
-            if(!data.title || !data.body){
-                return res.status(400).json({ status: false, msg: "All fields are required"});
-            }else{
-                const newNotification = new Notification({
-                    title: data.title,
-                    body: data.body
-                })
 
-                await newNotification.save();
-
-                await User.updateMany({}, {$push: {
-                    notifications: newNotification._id
-                }})
-                return res.status(200).json({ status: true, msg: "Message Sent"});
+            if (!data.text || !data.subject) {
+                return res.status(400).json({ status: false, msg: "All fields are required!" });
             }
+
+            const newNotification = new Notification({
+                subject: data.subject,
+                text: data.text,
+            })
+
+            await newNotification.save();
+
+            await User.updateMany({}, {
+                $push: { newNotifications: newNotification._id }
+            })
+
+            return res.status(200).json({ status: true, msg: "Notification pushed successfully" });
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
         }
     },
 
-    get: async (req, res)=> {
-        try{
-            const data = await Notification.find({}).sort({createdAt: -1});
-            return res.status(200).json({ status: true, msg: "Successful", data});
+    getAdd_Admin: async (req, res) => {
+        try {
+            const data = await Notification.find({}).sort({ createdAt: -1 });
+            return res.status(200).json({ status: true, msg: "Successful", data });
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
         }
     },
-    
-    read: async (req, res)=> {
-        try{
+
+    getAdd_Admin: async (req, res) => {
+        try {
+            const data = await Notification.findOne({ _id: req.params });
+            return res.status(200).json({ status: true, msg: "Successful", data });
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
+    },
+
+    // user read
+    read: async (req, res) => {
+        try {
             const userId = req.user;
-            const {id} = req.params
+            const { id } = req.params
 
             // update the the user
 
-            const data = await User.findOneAndUpdate({_id: userId}, {$pull: {
-                notifications: id
-            }}, {new: true})
+            await User.findOneAndUpdate({ _id: userId }, {
+                $pull: {
+                    newNotifications: id
+                }
+            })
 
-            return res.status(200).json({ status: true, msg: "Message updated", data});
+            await User.findOneAndUpdate({ _id: userId }, {
+                $push: {
+                    readNotifications: id
+                }
+            })
+
+            return res.status(200).json({ status: true, msg: "Message updated", data: id });
         }
-        catch(err){
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support"})
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
         }
     },
-    
 
-    
+
+
 }

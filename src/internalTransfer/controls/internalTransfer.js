@@ -7,7 +7,8 @@ const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 
 const window = new JSDOM('').window;
-const DOMPurify = createDOMPurify(window)
+const DOMPurify = createDOMPurify(window);
+const mailgunSetup = require('../../config/mailgun');
 
 
 module.exports = {
@@ -158,6 +159,33 @@ module.exports = {
             const newInternalTransfer_ = await newInternalTransfer.save();
 
             const data_ = await InternalTransfer.findOne({ _id: newInternalTransfer_.id }).populate({ path: 'senderId', select: ['_id', 'username', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'email'] });
+
+            // send email to sender
+            const text_sender = `
+                <div> You transfered ${data.amount.toFixed(4)} ${currency} to ${rUser.username} </div>
+                <br />
+                <div> If this is not made by you, please contact the admin </div>
+            `
+            const email_sender_data = {
+                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                to: user.email,
+                subject: 'Transfer Transaction',
+                html: text_sender
+            }
+
+            // send email to receiver
+            const text_receiver = `
+                <div> The sum of ${data.amount.toFixed(4)} ${currency} was transfered to you from ${user.username} </div>
+            `
+            const email_receiver_data = {
+                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                to: rUser.email,
+                subject: 'Transfer Transaction',
+                html: text_receiver
+            }
+
+            await mailgunSetup.messages().send(email_sender_data)
+            await mailgunSetup.messages().send(email_receiver_data)
 
             return res.status(200).json({ status: true, msg: `Transaction successful`, data: data_ })
         }

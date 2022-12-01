@@ -40,7 +40,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions))
 
-app.use(morgan('combined'))
+// app.use(morgan('combined'))
 
 // register database model
 require('./src/auth/models/auth')
@@ -70,7 +70,7 @@ app.use('/api/v1/investment', require('./src/investment/routes/investment'));
 app.use('/api/v1/referral', require('./src/referral/routes/referral'));
 app.use('/api/v1/', require('./src/deposit/routes/deposit'));
 app.use('/api/v1/withdrawal', require('./src/withdrawal/routes/withdrawal'));
-// app.use('/api/v1/notification',  require('./src/notifications/routes/notification')); 
+app.use('/api/v1/notifications', require('./src/notifications/routes/notification'));
 // app.use('/api/v1/testimonials',  require('./src/testimonials/routes/testimonials')); 
 // app.use('/api/v1/message',  require('./src/message/routes/message')); 
 // app.use('/api/v1/referral-contest',  require('./src/referralContest/routes/referralContest')); 

@@ -3,9 +3,12 @@ const User = mongoose.model("User");
 const Config = mongoose.model("Config");
 const Profile = mongoose.model("Profile")
 const ReferralContest = mongoose.model("ReferralContest");
+const Withdrawal = mongoose.model("Withdrawal");
+const Deposit = mongoose.model("Deposit");
 const ReferralHistory = mongoose.model('ReferralHistory');
 const Investment = mongoose.model('Investment');
 const PasswordReset = mongoose.model('PasswordReset');
+const cloudinary = require("../../config/cloudinary");
 require("dotenv").config();
 
 const bcrypt = require("bcrypt");
@@ -67,6 +70,8 @@ module.exports = {
             //find user by id sent from the client
             const data = await User.findOne({ _id: userId })
                 .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
+                .populate('newNotifications')
+                .populate('readNotifications')
                 .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
                 .populate({ path: 'profile' })
                 .select("-password");
@@ -594,7 +599,7 @@ module.exports = {
     deleteManyAccounts: async (req, res) => {
         try {
             // find these users that are not admin
-            const users = await User.find({ $and: [{ _id: req.body.id }, { role: 'USER' }] }).select('_id')
+            const users = await User.find({ $and: [{ _id: req.body.id }, { role: 'USER' }] })
 
             // loop through and get their ids
             let id = []
@@ -608,9 +613,18 @@ module.exports = {
             // delete all users
             await User.deleteMany({ _id: id })
 
+            // delete this users profile pic from cloudinary using their public id if it exist
+            // 1. get their public id
+            const public_ids = await Profile.find({ _id: profileId }).select(['profilePicPublicId', '-_id']);
+            for (let public_id of public_ids) {
+
+                // remove the pic if exist
+                public_id.profilePicPublicId ? await cloudinary.v2.uploader.destroy(public_id.profilePicPublicId, { invalidate: true }) : ""
+            }
+
+
             // delete from profile collection
             await Profile.deleteMany({ _id: profileId })
-
 
             // delete from Contest Database
             await ReferralContest.deleteMany({ userId: id })
@@ -619,13 +633,15 @@ module.exports = {
             await ReferralHistory.deleteMany({ referrerId: id })
 
             // delete their withdrawal hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Withdrawal.deleteMany({ userId: id })
 
             // delete their deposit hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Deposit.deleteMany({ userId: id })
 
             // delete their investment hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Investment.deleteMany({ userId: id })
+
+            // do not delete transfer
 
             return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted`, data: id });
 
@@ -650,13 +666,20 @@ module.exports = {
                 profileId.push(user.profile)
             }
 
-
             // delete all users
             await User.deleteMany({ _id: id })
 
+            // delete this users profile pic from cloudinary using their public id if it exist
+            // 1. get their public id
+            const public_ids = await Profile.find({ _id: profileId }).select(['profilePicPublicId', '-_id']);
+            for (let public_id of public_ids) {
+
+                // remove the pic if exist
+                public_id.profilePicPublicId ? await cloudinary.v2.uploader.destroy(public_id.profilePicPublicId, { invalidate: true }) : ""
+            }
+
             // delete from profile collection
             await Profile.deleteMany({ _id: profileId })
-
 
             // delete from Contest Database
             await ReferralContest.deleteMany({ userId: id })
@@ -665,13 +688,15 @@ module.exports = {
             await ReferralHistory.deleteMany({ referrerId: id })
 
             // delete their withdrawal hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Withdrawal.deleteMany({ userId: id })
 
             // delete their deposit hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Deposit.deleteMany({ userId: id })
 
             // delete their investment hx
-            //...await User.findByIdAndDelete({userId_: id})
+            await Investment.deleteMany({ userId: id })
+
+            // do not delete transfer
 
             return res.status(200).json({ status: true, msg: `${id.length} account${id.length > 1 ? 's' : ''} deleted`, data: id });
 

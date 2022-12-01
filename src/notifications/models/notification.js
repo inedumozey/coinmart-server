@@ -1,17 +1,12 @@
 const mongoose = require('mongoose');
-const {ObjectId} = mongoose.Schema.Types
 
 const schema = new mongoose.Schema(
     {
-        title: {
+        subject: {
             type: String,
         },
-        body: {
+        text: {
             type: String,
-        },
-        isRead: {
-            type: Boolean,
-            default: false
         }
     },
     {

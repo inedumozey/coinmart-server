@@ -16,7 +16,7 @@ module.exports = {
 
     getAllPlans: async (req, res) => {
         try {
-            const data = await InvestmentPlan.find({}).sort({ amount: 1 });
+            const data = await InvestmentPlan.find({}).sort({ minAmount: -1 });
             return res.status(200).json({ status: true, msg: "Plans fetched successfully", data })
         }
         catch (err) {

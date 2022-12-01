@@ -247,7 +247,7 @@ module.exports = {
 
             const withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
 
-            // senf email to admin
+            // senf email to user
             const text = `
                 <div> Your Withdrawal Request was Confirmed </div>
                 <br />
