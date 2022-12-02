@@ -67,7 +67,6 @@ module.exports = {
                 return res.status(400).json({ status: false, msg: "Insulficient balance" });
             }
 
-
             // get all Withdrawal hx, and check if the user has a pending transaction
             const pending = await Withdrawal.find({ $and: [{ userId }, { status: "pending" }] })
 
@@ -84,17 +83,6 @@ module.exports = {
                 currency,
             })
 
-            // remove the amount from the user's account balance
-            await User.findByIdAndUpdate({ _id: userId }, {
-                $set: {
-                    amount: (user.amount - data.amount).toFixed(8)
-                }
-            });
-
-            const newData = await newData_.save();
-
-            const withdrawalData = await Withdrawal.findOne({ _id: newData.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
-
             // send email to admin
             const text = `
                     <div> <span style="font-weight: bold">${user.username}</span> just placed a Withdrawal Request </div>
@@ -106,9 +94,9 @@ module.exports = {
                     <br />
                     <div> Coin: ${data.coin} <div/ >
                     <br />
-                    <div> Transaction Id: ${newData._id} </div>
+                    <div> Transaction Id: ${newData_._id} </div>
                     <br />
-                    <div> Date: ${new Date(newData.createdAt).toLocaleString()} </div>
+                    <div> Date: ${new Date(newData_.createdAt).toLocaleString()} </div>
                     <br />
                     <div>
                         <a style="text-align:center; font-weight: 600" href="${URL_ADMIN}">Click to Resolve</a>
@@ -123,9 +111,34 @@ module.exports = {
                 html: text
             }
 
-            await mailgunSetup.messages().send(email_data)
+            mailgunSetup.messages().send(email_data, async (err, resp) => {
+                if (err) {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message });
+                    }
+                }
+                else {
 
-            return res.status(200).json({ status: true, msg: `Your transaction is pending, It will be confirmed within ${pendingWithdrawalDuration} hours`, data: withdrawalData })
+                    // remove the amount from the user's account balance
+                    await User.findByIdAndUpdate({ _id: userId }, {
+                        $set: {
+                            amount: (user.amount - data.amount).toFixed(8)
+                        }
+                    });
+
+                    const newData = await newData_.save();
+
+                    const withdrawalData = await Withdrawal.findOne({ _id: newData.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
+
+                    return res.status(200).json({ status: true, msg: `Your transaction is pending, It will be confirmed within ${pendingWithdrawalDuration} hours`, data: withdrawalData })
+                }
+            });
         }
 
         catch (err) {
@@ -157,21 +170,11 @@ module.exports = {
             }
 
             // save this data in Withdrawal database and change the status to rejected and refund the money to user
-
             // find the user
             const user = await User.findOne({ _id: withdrawalHx.userId })
 
-            // add the removed amount to the user's account balance
-            await User.findByIdAndUpdate({ _id: withdrawalHx.userId }, { $set: { amount: user.amount + withdrawalHx.amount } })
-
-            // update the Withdrawal database and change the status to rejected
-            await Withdrawal.findByIdAndUpdate({ _id: id }, {
-                $set: {
-                    status: 'rejected',
-                }
-            })
-
-            const withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
+            // find the withdrawal
+            let withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id })
 
             // send email to admin
             const text = `
@@ -201,9 +204,34 @@ module.exports = {
                 html: text
             }
 
-            await mailgunSetup.messages().send(email_data)
+            mailgunSetup.messages().send(email_data, async (err, resp) => {
+                if (err) {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message });
+                    }
+                }
+                else {
+                    // add the removed amount to the user's account balance
+                    await User.findByIdAndUpdate({ _id: withdrawalHx.userId }, { $set: { amount: user.amount + withdrawalHx.amount } })
 
-            return res.status(200).json({ status: true, msg: `withdrawal to this wallet ${withdrawalData.walletAddress} was rejected`, data: withdrawalData })
+                    // update the Withdrawal database and change the status to rejected
+                    await Withdrawal.findByIdAndUpdate({ _id: id }, {
+                        $set: {
+                            status: 'rejected',
+                        }
+                    })
+
+                    withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
+
+                    return res.status(200).json({ status: true, msg: `withdrawal to this wallet ${withdrawalData.walletAddress} was rejected`, data: withdrawalData })
+                }
+            });
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: err.mrssage })
@@ -238,14 +266,7 @@ module.exports = {
                 return res.status(400).json({ status: false, msg: "Transaction already confirmed" });
             }
 
-            // update the Withdrawal database and change the status to confirmed
-            await Withdrawal.findByIdAndUpdate({ _id: id }, {
-                $set: {
-                    status: 'confirmed',
-                }
-            })
-
-            const withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
+            let withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id })
 
             // senf email to user
             const text = `
@@ -274,9 +295,31 @@ module.exports = {
                 html: text
             }
 
-            await mailgunSetup.messages().send(email_data)
+            mailgunSetup.messages().send(email_data, async (err, resp) => {
+                if (err) {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message })
+                    }
+                }
+                else {
+                    // update the Withdrawal database and change the status to confirmed
+                    await Withdrawal.findByIdAndUpdate({ _id: id }, {
+                        $set: {
+                            status: 'confirmed',
+                        }
+                    })
 
-            return res.status(200).json({ status: true, msg: `Transaction confirmed`, data: withdrawalData })
+                    withdrawalData = await Withdrawal.findOne({ _id: withdrawalHx.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
+
+                    return res.status(200).json({ status: true, msg: `Transaction confirmed`, data: withdrawalData })
+                }
+            })
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message })

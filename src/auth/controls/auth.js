@@ -70,8 +70,8 @@ module.exports = {
             //find user by id sent from the client
             const data = await User.findOne({ _id: userId })
                 .populate({ path: 'referrerId', select: ['_id', 'email', 'username'] })
-                .populate('newNotifications')
-                .populate('readNotifications')
+                .populate({ path: 'newNotifications' })
+                .populate({ path: 'readNotifications' })
                 .populate({ path: 'referreeId', select: ['_id', 'email', 'username', 'hasInvested'] })
                 .populate({ path: 'profile' })
                 .select("-password");

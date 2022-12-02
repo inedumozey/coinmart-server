@@ -156,10 +156,6 @@ module.exports = {
                 currency,
             })
 
-            const newInternalTransfer_ = await newInternalTransfer.save();
-
-            const data_ = await InternalTransfer.findOne({ _id: newInternalTransfer_.id }).populate({ path: 'senderId', select: ['_id', 'username', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'email'] });
-
             // send email to sender
             const text_sender = `
                 <div> You transfered ${data.amount.toFixed(4)} ${currency} to ${rUser.username} </div>
@@ -184,10 +180,43 @@ module.exports = {
                 html: text_receiver
             }
 
-            await mailgunSetup.messages().send(email_sender_data)
-            await mailgunSetup.messages().send(email_receiver_data)
+            mailgunSetup.messages().send(email_sender_data, async (err, resp) => {
+                if (err) {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message })
+                    }
+                }
+                else {
 
-            return res.status(200).json({ status: true, msg: `Transaction successful`, data: data_ })
+                    mailgunSetup.messages().send(email_receiver_data, async (err, resp) => {
+                        if (err) {
+                            if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                                return res.status(408).json({ status: false, msg: "No network connectivity" })
+                            }
+                            else if (err.message.includes("ETIMEDOUT")) {
+                                return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                            }
+                            else {
+                                return res.status(500).json({ status: false, msg: err.message })
+                            }
+                        }
+                        else {
+
+                            const newInternalTransfer_ = await newInternalTransfer.save();
+
+                            const data_ = await InternalTransfer.findOne({ _id: newInternalTransfer_.id }).populate({ path: 'senderId', select: ['_id', 'username', 'email'] }).populate({ path: 'receiverId', select: ['_id', 'username', 'email'] });
+
+                            return res.status(200).json({ status: true, msg: `Transaction successful`, data: data_ })
+                        }
+                    })
+                }
+            })
         }
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message })

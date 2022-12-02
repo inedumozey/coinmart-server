@@ -122,7 +122,7 @@ module.exports = {
                         comment: 'canceled',
                         status: 'charge-failed',
                     }
-                })
+                });
             }
 
             // charge pending

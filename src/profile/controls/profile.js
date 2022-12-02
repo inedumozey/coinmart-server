@@ -3,6 +3,7 @@ const User = mongoose.model("User");
 const Config = mongoose.model("Config");
 const Profile = mongoose.model("Profile")
 require("dotenv").config();
+const mailgunSetup = require('../../config/mailgun');
 
 const multerConfig = require("../../config/multer");
 const path = require("path")
@@ -135,5 +136,56 @@ module.exports = {
         }
     },
 
+    contactAdmin: async (req, res) => {
+        try {
+            const userId = req.user;
+            // find the profile id from User collection
+            const user = await User.findOne({ _id: userId }).select('email');
 
+
+            const data = {
+                subject: DOMPurify.sanitize(req.body.subject),
+                message: DOMPurify.sanitize(req.body.message),
+            }
+
+            const { subject, message } = data
+            if (!subject || !message) {
+                return res.status(400).json({ status: false, msg: "All fields are required!" })
+            }
+
+            if (!user.email) {
+                return res.status(400).json({ status: true, msg: "User not foubd!" })
+            }
+
+            const email_data = {
+                from: user.email,
+                to: [process.env.EMAIL_USER2, process.env.EMAIL_USER],
+                subject: subject,
+                html: `<p>${message}</p>`
+            }
+
+            mailgunSetup.messages().send(email_data, async (err, resp) => {
+                if (err) {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message })
+                    }
+                }
+                else {
+                    ''
+                }
+            })
+
+            return res.status(200).json({ status: true, msg: "Your message has be sent successfully" })
+
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.message })
+        }
+    },
 }
