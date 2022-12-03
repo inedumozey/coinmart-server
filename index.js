@@ -60,8 +60,6 @@ require('./src/notifications/models/notification')
 // require('./src/testimonials/models/testimonials')
 
 // routes
-app.use('/api/v1/admin', require("./src/history/admin/routes"));
-app.use('/api/v1/user', require("./src/history/user/routes"));
 app.use('/api/v1/auth', require("./src/auth/routes/auth"));
 app.use('/api/v1/profile', require("./src/profile/routes/profile"));
 app.use('/api/v1/config', require('./src/websiteConfig/routes/config'));
@@ -73,6 +71,7 @@ app.use('/api/v1/withdrawal', require('./src/withdrawal/routes/withdrawal'));
 app.use('/api/v1/notifications', require('./src/notifications/routes/notification'));
 // app.use('/api/v1/testimonials',  require('./src/testimonials/routes/testimonials')); 
 app.use('/api/v1/message', require('./src/message/routes/message'));
+app.use('/api/v1/history', require("./src/history/routes/routes"));
 // app.use('/api/v1/referral-contest',  require('./src/referralContest/routes/referralContest')); 
 app.use('/api/v1/payusers', require('./src/payuser/routes/payusers'));
 
