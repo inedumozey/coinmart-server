@@ -125,7 +125,7 @@ module.exports = {
     getAllReferralContest: async (req, res) => {
         try {
 
-            const data = await Contest.find({}).populate({ path: 'userId', select: ['_id', 'email', 'username', 'referreeId'] }).sort({ point: -1, updatedAt: 1 });
+            const data = await ReferralContest.find({}).populate({ path: 'userId', select: ['_id', 'email', 'username', 'referreeId', 'amount'] }).sort({ point: -1, updatedAt: 1 });
 
             return res.status(200).json({ status: true, msg: "successful", data })
         }
@@ -156,10 +156,10 @@ module.exports = {
             }
 
             else if (contestIsOn) {
-                return res.status(400).json({ status: false, msg: "Data cannot be reseted when contest is till on going, try again later" })
+                return res.status(400).json({ status: false, msg: "Data cannot be reseted when contest is still ongoing, please try again when the contest is over" })
             }
             else {
-                await Contest.updateMany({}, {
+                await ReferralContest.updateMany({}, {
                     $set: {
                         point: 0,
                         rewards: 0,
@@ -167,10 +167,9 @@ module.exports = {
                         position: null,
                         resolved: false
                     }
-                }, { new: true });
+                });
 
-                const data = await Contest.find({}).populate({ path: 'userId', select: ['_id', 'email', 'username', 'referreeId'] }).sort({ point: -1, updatedAt: 1 });
-                return res.status(200).json({ status: true, msg: "Reseted Successfully", data })
+                return res.status(200).json({ status: true, msg: "Reseted Successfully" })
             }
         }
         catch (err) {
@@ -182,23 +181,23 @@ module.exports = {
         try {
             const config = await Config.find({});
 
-            const allowReferralContest = config && config.length >= 1 && config[0].allowReferralContest ? config[0].allowReferralContest : process.env.ALLOW_REFERRAL_CONTEST;
+            const allowReferralContest = config && config[0].allowReferralContest
 
-            const referralContestStarts = config && config.length >= 1 && config[0].referralContestStarts
+            const referralContestStarts = config && config[0].referralContestStarts
 
-            const referralContestStops = config && config.length >= 1 && config[0].referralContestStops
+            const referralContestStops = config && config[0].referralContestStops
 
-            const referralContestPrize = config && config.length >= 1 && config[0].referralContestPrize
+            const referralContestPrizes = config && config[0].referralContestPrizes
 
             const currentTime = Date.now()
             const startsAt = new Date(referralContestStarts).getTime()
             const stopsAt = new Date(referralContestStops).getTime()
 
             const contestIsOn = currentTime >= startsAt && currentTime <= stopsAt;
-            const data = await Contest.find({}).sort({ point: -1, updatedAt: 1 });
+            const data = await ReferralContest.find({}).sort({ point: -1, updatedAt: 1 });
 
-            // get the users of the length of referralContestPrize - 1
-            const qualifiedUsers = data.slice(0, referralContestPrize.length);
+            // get the users of the length of referralContestPrizes - 1
+            const qualifiedUsers = data.slice(0, referralContestPrizes.length);
 
             //check if contest is still on, send error
             if (!allowReferralContest) {
@@ -212,12 +211,12 @@ module.exports = {
             else {
                 // otherwise pay users
 
-                //loop through referralContestPrize and get each price together with the users of the length of the referralContestPrize
-                for (let i = 0; i < referralContestPrize.length; i++) {
+                //loop through referralContestPrizes and get each price together with the users of the length of the referralContestPrizes
+                for (let i = 0; i < referralContestPrizes.length; i++) {
                     if (qualifiedUsers[i] && !qualifiedUsers[i].paid && qualifiedUsers[i].point > 0) {
-                        await Contest.findOneAndUpdate({ userId: qualifiedUsers[i].userId }, {
+                        await ReferralContest.findOneAndUpdate({ userId: qualifiedUsers[i].userId }, {
                             $set: {
-                                rewards: referralContestPrize[i],
+                                rewards: referralContestPrizes[i],
                                 paid: true,
                                 position: Number(i) + 1
                             }
@@ -226,7 +225,7 @@ module.exports = {
                 }
 
                 // find those that were paid (those that were qualified) in the User database and update their account balance
-                const contestants = await Contest.find({ paid: true });
+                const contestants = await ReferralContest.find({ paid: true });
 
                 for (let contestant of contestants) {
                     if (!contestant.resolved) {
@@ -237,17 +236,14 @@ module.exports = {
                             }
                         });
 
-                        await Contest.findOneAndUpdate({ _id: contestant.id }, {
+                        await ReferralContest.findOneAndUpdate({ _id: contestant.id }, {
                             $set: {
                                 resolved: true
                             }
                         })
                     }
                 }
-
-                // send the updated contest data to the frontend
-                const data = await Contest.find({}).populate({ path: 'userId', select: ['_id', 'email', 'username', 'referreeId'] }).sort({ point: -1, updatedAt: 1 });
-                return res.status(200).json({ status: true, msg: "Rewarded Successfully", data })
+                return res.status(200).json({ status: true, msg: "Rewarded Successfully" })
             }
 
         }
