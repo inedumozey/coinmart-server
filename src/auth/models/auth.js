@@ -8,7 +8,8 @@ const schema = new mongoose.Schema(
             type: String,
             require: true,
             unique: true,
-            unique: true
+            trim: true,
+
         },
         email: {
             type: String,
@@ -24,6 +25,7 @@ const schema = new mongoose.Schema(
         profile: { type: ObjectId, ref: 'Profile' },
         amount: {
             type: Number,
+            trim: true,
             default: 0
         },
         currency: {
@@ -36,7 +38,8 @@ const schema = new mongoose.Schema(
         },
         role: {
             type: String,
-            default: "USER"
+            default: "USER",
+            trim: true,
         },
         isSupperAdmin: {
             type: Boolean,

@@ -340,8 +340,7 @@ module.exports = {
                             })
 
                             // update the referral ReferralContest collection if allowContest is true
-                            if (!allowContest) {
-                                console.log({ work: plan.point })
+                            if (allowContest) {
                                 await ReferralContest.findOneAndUpdate({ userId: user.referrerId }, {
                                     $inc: {
                                         point: plan.point,
