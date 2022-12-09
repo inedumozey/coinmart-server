@@ -330,4 +330,19 @@ module.exports = {
         }
     },
 
+    latest: async (req, res) => {
+        try {
+            const data = await Deposit.find({ status: 'charge-confirmed' })
+                .populate({ path: 'userId', select: ['_id', 'email', 'username'] })
+                .sort({ updatedAt: -1 })
+                .limit(10)
+
+            return res.status(200).json({ status: true, msg: 'successful', data })
+
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.response.data })
+        }
+    },
+
 }

@@ -399,5 +399,20 @@ module.exports = {
         catch (err) {
             return res.status(500).json({ status: false, msg: err.message })
         }
-    }
+    },
+
+    latest: async (req, res) => {
+        try {
+            const data = await Withdrawal.find({ status: 'confirmed' })
+                .populate({ path: 'userId', select: ['_id', 'email', 'username'] })
+                .sort({ updatedAt: -1 })
+                .limit(10)
+
+            return res.status(200).json({ status: true, msg: 'successful', data })
+
+        }
+        catch (err) {
+            return res.status(500).json({ status: false, msg: err.response.data })
+        }
+    },
 }

@@ -10,6 +10,7 @@ route.get("/get-transaction/:id", activatedUserAuth, withdrawal.getTransaction);
 route.post("/request", activatedUserAuth, withdrawal.request);
 route.put("/reject/:id", activatedUserAuth, adminAuth, withdrawal.rejected);
 route.put("/confirm/:id", activatedUserAuth, adminAuth, withdrawal.confirm);
+route.get("/latest", withdrawal.latest);
 
 
 module.exports = route
