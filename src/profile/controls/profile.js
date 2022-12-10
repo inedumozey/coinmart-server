@@ -177,11 +177,9 @@ module.exports = {
                     }
                 }
                 else {
-                    ''
+                    return res.status(200).json({ status: true, msg: "Your message has be sent successfully" })
                 }
             })
-
-            return res.status(200).json({ status: true, msg: "Your message has be sent successfully" })
 
         }
         catch (err) {

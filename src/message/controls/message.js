@@ -35,15 +35,24 @@ module.exports = {
 
             const email_data = {
                 from: email,
-                to: ["foycalsystem@gmail.com", process.env.EMAIL_USER],
+                to: [process.env.EMAIL_USER2, process.env.EMAIL_USER],
                 subject: subject,
                 html: `<p>${message}</p>`
             }
 
-            mailgunSetup.messages().send(email_data, (err, body) => {
+            mailgunSetup.messages().send(email_data, async (err, resp) => {
                 if (err) {
-                    return res.status(400).json({ status: true, msg: err.message })
-                } else {
+                    if (err.message.includes("ENOTFOUND") || err.message.includes("EREFUSED") || err.message.includes("EHOSTUNREACH")) {
+                        return res.status(408).json({ status: false, msg: "No network connectivity" })
+                    }
+                    else if (err.message.includes("ETIMEDOUT")) {
+                        return res.status(408).json({ status: false, msg: "Request Time-out! Check your network connections" })
+                    }
+                    else {
+                        return res.status(500).json({ status: false, msg: err.message })
+                    }
+                }
+                else {
                     return res.status(200).json({ status: true, msg: "Your message has be sent successfully" })
                 }
             })
