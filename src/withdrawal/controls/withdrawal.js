@@ -84,6 +84,8 @@ module.exports = {
             })
 
             // send email to admin
+            console.log(new Date(newData_.createdAt))
+            console.log(newData_.createdAt)
             const text = `
                     <div> <span style="font-weight: bold">${user.username}</span> just placed a Withdrawal Request </div>
                     <br />
@@ -136,7 +138,7 @@ module.exports = {
 
                     const withdrawalData = await Withdrawal.findOne({ _id: newData.id }).populate({ path: 'userId', select: ['_id', 'username', 'email'] })
 
-                    return res.status(200).json({ status: true, msg: `Your transaction is pending, It will be confirmed within ${pendingWithdrawalDuration} hours`, data: withdrawalData })
+                    return res.status(200).json({ status: true, msg: `Pending transaction! It will be resolved within ${pendingWithdrawalDuration} hours`, data: withdrawalData })
                 }
             });
         }
@@ -401,6 +403,7 @@ module.exports = {
         }
     },
 
+    // 10 most recent confirmed withdrawal hx
     latest: async (req, res) => {
         try {
             const data = await Withdrawal.find({ status: 'confirmed' })

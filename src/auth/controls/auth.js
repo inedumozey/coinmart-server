@@ -262,7 +262,7 @@ module.exports = {
                 const user = await User.findOne({ $or: [{ email }, { username: email }] });
 
                 if (!user) {
-                    return res.status(400).json({ status: false, msg: "User not found" });
+                    return res.status(400).json({ status: false, msg: "Invalid login  credentials" });
                 }
 
                 // match provided password with the one in database

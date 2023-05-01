@@ -363,7 +363,7 @@ module.exports = {
                         $inc: { investmentCount: 1 }
                     })
 
-                    return res.status(200).json({ status: true, msg: `You have started investing for ${plan.type}` })
+                    return res.status(200).json({ status: true, msg: `Investing started for ${plan.type}` })
                 }
             }
         }
@@ -385,7 +385,7 @@ module.exports = {
             return res.status(200).send({ status: true, msg: 'Successful', data: { maturedInvestment, activeInvestment } })
         }
         catch (err) {
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support" })
+            return res.status(500).json({ status: false, msg: msg.message || "Server error, please contact customer support" })
         }
     },
 
@@ -431,7 +431,7 @@ module.exports = {
             }
         }
         catch (err) {
-            return res.status(500).json({ status: false, msg: "Server error, please contact customer support" })
+            return res.status(500).json({ status: false, msg: msg.message || "Server error, please contact customer support" })
         }
     },
 

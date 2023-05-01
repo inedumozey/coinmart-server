@@ -330,6 +330,7 @@ module.exports = {
         }
     },
 
+    // 10 most recent confirmed deposit hx
     latest: async (req, res) => {
         try {
             const data = await Deposit.find({ status: 'charge-confirmed' })
@@ -344,5 +345,4 @@ module.exports = {
             return res.status(500).json({ status: false, msg: err.response.data })
         }
     },
-
 }
