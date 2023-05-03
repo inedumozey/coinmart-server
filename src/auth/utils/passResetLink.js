@@ -21,7 +21,7 @@ module.exports = async (data, res) => {
     if (process.env.ENV !== 'development') {
 
         const email_data = {
-            from: `${configData.name} <${process.env.EMAIL_USER}>`,
+            from: `${configData.name}. <${process.env.EMAIL_USER2}>`,
             to: data.email,
             subject: 'Reset Your Password',
             html: text.linkText(configData.name, configData.bio, configData.bg, URL, data, 'password', "Click to Reset your Password")

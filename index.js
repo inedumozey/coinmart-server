@@ -96,3 +96,37 @@ app.listen(PORT, (err) => {
         console.log(`Server Running on Port ${PORT}`)
     }
 })
+
+const nodemailer = require("nodemailer");
+
+const sendMail = async (message) => {
+    try {
+
+        let transporter = nodemailer.createTransport({
+            host: "extractcoinmart.com",
+            port: 465,
+            secure: fal,
+            auth: {
+                user: "admin@extractcoinmart.com",
+                pass: "@My08036000347"
+            },
+        });
+
+        let info = await transporter.sendMail(message);
+
+        return info;
+    }
+
+    catch (err) {
+        return err;
+    }
+}
+
+var message = {
+    from: process.env.EMAIL_USER,
+    to: "inedumozey@gmail.com",
+    subject: "Message title",
+    text: "Test",
+    html: "<p>Okay</p>"
+};
+

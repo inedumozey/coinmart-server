@@ -26,7 +26,7 @@ module.exports = async (user, res, refcode, type, data) => {
     if (process.env.ENV !== 'development') {
 
         const email_data = {
-            from: `${configData.name} <${process.env.EMAIL_USER}>`,
+            from: `${configData.name}. <${process.env.EMAIL_USER2}>`,
             to: user.email,
             subject: 'Verify Your Email',
             html: text.linkText(configData.name, configData.bio, configData.bg, URL, user, 'verify-email', "Click to Activate your Account")

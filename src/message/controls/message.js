@@ -35,7 +35,7 @@ module.exports = {
 
             const email_data = {
                 from: email,
-                to: [process.env.EMAIL_USER2, process.env.EMAIL_USER],
+                to: [process.env.EMAIL_USER],
                 subject: subject,
                 html: `<p>${message}</p>`
             }

@@ -84,8 +84,6 @@ module.exports = {
             })
 
             // send email to admin
-            console.log(new Date(newData_.createdAt))
-            console.log(newData_.createdAt)
             const text = `
                     <div> <span style="font-weight: bold">${user.username}</span> just placed a Withdrawal Request </div>
                     <br />
@@ -107,8 +105,8 @@ module.exports = {
                     <div>${URL_ADMIN}</div>
                 `
             const email_data = {
-                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
-                to: [process.env.EMAIL_USER, process.env.EMAIL_USER2],
+                from: `${process.env.NAME}. <${process.env.EMAIL_USER2}>`,
+                to: [process.env.EMAIL_USER],
                 subject: 'New Withdrawal Request',
                 html: text
             }
@@ -200,7 +198,7 @@ module.exports = {
                 `
 
             const email_data = {
-                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                from: `${process.env.NAME}. <${process.env.EMAIL_USER2}>`,
                 to: user.email,
                 subject: 'Withdrawal Transaction',
                 html: text
@@ -291,7 +289,7 @@ module.exports = {
                 <div>${URL_USER}</div>
             `
             const email_data = {
-                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                from: `${process.env.NAME}. <${process.env.EMAIL_USER2}>`,
                 to: user.email,
                 subject: 'Withdrawal Transaction',
                 html: text

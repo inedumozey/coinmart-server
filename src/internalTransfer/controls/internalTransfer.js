@@ -163,7 +163,7 @@ module.exports = {
                 <div> If this is not made by you, please contact the admin </div>
             `
             const email_sender_data = {
-                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                from: `${process.env.NAME}. <${process.env.EMAIL_USER2}>`,
                 to: user.email,
                 subject: 'Transfer Transaction',
                 html: text_sender
@@ -174,7 +174,7 @@ module.exports = {
                 <div> The sum of ${data.amount.toFixed(4)} ${currency} was transfered to you from ${user.username} </div>
             `
             const email_receiver_data = {
-                from: `${process.env.NAME} <${process.env.EMAIL_USER}>`,
+                from: `${process.env.NAME}. <${process.env.EMAIL_USER2}>`,
                 to: rUser.email,
                 subject: 'Transfer Transaction',
                 html: text_receiver
